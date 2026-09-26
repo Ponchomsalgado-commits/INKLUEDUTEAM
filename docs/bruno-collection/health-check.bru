@@ -1,0 +1,16 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/v1/health
+  body: none
+  auth: none
+}
+
+docs {
+  Confirma que el backend está corriendo y conectado a PostgreSQL.
+  Respuesta esperada: { "status": "ok", "database": "connected" }
+}
