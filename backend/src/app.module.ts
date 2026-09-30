@@ -4,7 +4,10 @@ import { PrismaModule } from "./prisma/prisma.module";
 
 @Module({
     imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({ 
+            isGlobal: true,
+            envFilePath: ".env.backend"
+        }),
         PrismaModule,
     ],
 })
