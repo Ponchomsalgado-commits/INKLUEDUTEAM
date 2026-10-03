@@ -37,9 +37,9 @@ proyecto-tdah/
 ## Ramas de trabajo
 
 - `main` — rama protegida, integración al cierre de cada sprint.
-- `feature/backend-*` — rama de trabajo del backend.
-- `feature/web-*` — rama de trabajo de la app web.
-- `feature/mobile-*` — rama de trabajo de la app móvil.
+- `feat/backend` — rama de trabajo del backend.
+- `feat/web` — rama de trabajo de la app web.
+- `feat/mobile` — rama de trabajo de la app móvil.
 
 ## Documentación
 
