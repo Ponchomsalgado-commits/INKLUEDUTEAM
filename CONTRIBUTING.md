@@ -2,23 +2,18 @@
 
 ## Ramas
 
-- `main`: siempre estable. No se hace push directo.
-- `feature/backend-<descripcion>`: trabajo de backend (ej. `feature/backend-auth`).
-- `feature/web-<descripcion>`: trabajo de la app web.
-- `feature/mobile-<descripcion>`: trabajo de la app móvil.
+- `main`: siempre estable. No se hace push directo.(Magaña se encarga de hacer pull request ó merge al final de cada sprint)
+- `feat/backend`: trabajo de backend.
+- `feat/web`: trabajo de la app web.
+- `feat/mobile`: trabajo de la app móvil.
 
 Cada rama se integra a `main` al cierre de su sprint correspondiente, vía Pull Request.
 
 ## Commits
 
-Formato sugerido: `tipo: descripción corta`
+Formato sugerido: `"ID tarea:"+"que se trabajo en ese commit"`
+Ejemplo de formato de commit: `"T0101: agrege una base de datos en mySQL"`
 
-Tipos comunes: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`.
-
-Ejemplos:
-- `feat: endpoint de health check`
-- `fix: corrige validación de password_hash`
-- `docs: actualiza .env.example con variables de MinIO`
 
 ## Variables de entorno
 
