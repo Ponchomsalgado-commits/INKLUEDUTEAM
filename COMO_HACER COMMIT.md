@@ -10,7 +10,7 @@
 Cada rama se integra a `main` al cierre de su sprint correspondiente, vía Pull Request.
 
 ## Como hacer commit
-- git checkout nombre-de-tu-rama     (asi te mueves a tu rama para empezar a editar codigo)
+- git switch nombre-de-tu-rama     (asi te mueves a tu rama para empezar a editar codigo)
 - git add .    (preparas el commit)
 - git commit -m "ID tarea:"+"que se trabajo en ese commit"   (preparas el commit)
 - git push origin nombre-de-tu-rama (aqui se envia el commit a tu rama en git hub: feat/backend, feat/web ó feat/mobile)
