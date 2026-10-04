@@ -1,4 +1,5 @@
-// flutter pub add dio (correr esto en la terminal)
+//cd mobile (correr primero este en la terminal)
+//flutter pub add dio (correr esto de segundo en la terminal)
 import 'package:dio/dio.dart';
 
 class ApiClient {
