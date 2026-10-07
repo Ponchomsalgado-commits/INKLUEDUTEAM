@@ -56,7 +56,7 @@ export default function Register() {
             type="tel" 
             value={celular} 
             onChange={(e) => setCelular(e.target.value)} 
-            placeholder="10 dígitos"
+            placeholder="9 dígitos"
             required 
           />
         </div>

@@ -7,7 +7,7 @@ function App() {
 
   return (
     <main className="app-container">
-      <h1>InkluEdu</h1>
+      <h1>InkluEduu</h1>
       <nav className="nav-buttons" aria-label="Navegación de cuenta">
         <a href="/login">
           Login
