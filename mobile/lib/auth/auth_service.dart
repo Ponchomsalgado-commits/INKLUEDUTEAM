@@ -19,16 +19,26 @@ class AuthService {
   }
 
   // OJO: confirmar con tu compañero el valor exacto del rol
-  static const rolUsuarioA = 'UsuarioA';
+    static const rolUsuarioA = 'ESTUDIANTE';
 
   Future<void> register(String email, String password) async {
-    await api.dio.post(
-      '/api/v1/auth/register',
+    final res = await api.dio.post(
+      '/api/v1/auth/registro',
       data: {
         'email': email,
         'password': password,
         'role': rolUsuarioA,
       },
     );
+    await storage.saveTokens(
+      res.data['access_token'],
+      res.data['refresh_token'],
+    );
   }
+    Future<bool> tieneSesion() async {
+    final refresh = await storage.getRefreshToken();
+    return refresh != null && refresh.isNotEmpty;
+  }
+
+  Future<void> logout() => storage.clear();
 }

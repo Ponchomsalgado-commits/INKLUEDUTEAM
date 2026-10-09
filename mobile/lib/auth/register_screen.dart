@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api_client.dart';
 import '../core/token_storage.dart';
 import 'auth_service.dart';
+import '../home/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -64,8 +65,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await _auth.register(email, pass);
       if (!mounted) return;
-      // Regresa al login avisando que todo salió bien
-      Navigator.pop(context, true);
+      // Regresa al login avisando que todo salió bien _mensajeDeError
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (ruta) => false,
+      );
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() => _error = _mensajeDeError(e));
@@ -79,6 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _mensajeDeError(DioException e) {
     final codigo = e.response?.statusCode;
+    if (codigo == 404) return 'Este servicio todavía no está disponible.';
     if (codigo == 409) return 'Ese correo ya tiene una cuenta.';
     if (codigo == 400) return 'Revisa tus datos e intenta de nuevo.';
     if (codigo == null) return 'No pudimos conectar. Intenta de nuevo.';
@@ -164,3 +169,5 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+
+//navigator.pop

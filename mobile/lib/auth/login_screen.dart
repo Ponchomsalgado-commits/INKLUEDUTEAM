@@ -4,6 +4,7 @@ import '../api_client.dart';
 import '../core/token_storage.dart';
 import 'auth_service.dart';
 import 'register_screen.dart';
+import '../home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,9 +48,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _auth.login(email, pass);
       if (!mounted) return;
-      // TODO: navegar a la pantalla principal cuando exista
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Listo! Sesión iniciada.')),
+            Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (ruta) => false,
       );
     } on DioException catch (e) {
       if (!mounted) return;
@@ -131,21 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () async {
-                    final creada = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const RegisterScreen(),
-                      ),
-                    );
-                    if (creada == true && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Cuenta creada. Ya puedes iniciar sesión.'),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  ),
                   child: const Text('Crear cuenta'),
                 ),
               ],
@@ -157,4 +147,4 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-//textbutton
+//snackbar
