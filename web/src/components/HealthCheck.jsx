@@ -1,7 +1,7 @@
 // src/components/HealthCheck.jsx
 import { useState } from "react";
-import api from"../services/client.js";
-
+import api from"../services/apiClient.js";
+ //Componente para probar la conexión con el backend y mostrar el resultado de la prueba de salud. Se puede usar para verificar si el backend está funcionando correctamente y si la API está disponible.
 export default function HealthCheck() {
   const [resultado, setResultado] = useState(null);
   const [cargando, setCargando] = useState(false);
