@@ -1,0 +1,153 @@
+#root {
+  min-height: 100vh;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.app-container h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 22px 0 0;
+}
+
+.nav-buttons a {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: #38bdf8;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.nav-buttons a:hover {
+  background: #0ea5e9;
+}
+
+.nav-buttons a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #1e3a8a;
+  outline-offset: 3px;
+}
+
+.login-container,
+.register-container {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 20px;
+  padding: 35px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+}
+
+.login-container h2,
+.register-container h2,
+.not-found h2 {
+  margin: 0 0 20px;
+  color: #1e3a8a;
+  font-size: 22px;
+  text-align: center;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.form-group label {
+  margin-bottom: 6px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #f8fafc;
+  font-size: 14px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #3b82f6;
+  background: #fff;
+}
+
+.login-container button[type='submit'],
+.register-container button[type='submit'] {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #23a4dc;
+  color: #fffefe;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.login-container button[type='submit']:hover,
+.register-container button[type='submit']:hover {
+  background: #172554;
+}
+
+.login-container [role='status'],
+.register-container [role='status'] {
+  margin: 16px 0 0;
+  color: #1e3a8a;
+  font-size: 14px;
+  text-align: center;
+}
+
+.not-found {
+  margin-top: 24px;
+  color: #fff;
+  text-align: center;
+}
+
+.not-found h2 {
+  color: #fff;
+}
+
+.not-found a {
+  color: #fff;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    justify-content: flex-start;
+    padding: 32px 16px;
+  }
+
+  .login-container,
+  .register-container {
+    padding: 28px 22px;
+  }
+}

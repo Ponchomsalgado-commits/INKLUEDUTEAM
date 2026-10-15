@@ -1,5 +1,6 @@
 # === Variables de entorno ===
 .env
+.env.backend
 .env.local
 .env.*.local
 !.env.example

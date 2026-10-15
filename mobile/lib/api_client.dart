@@ -1,3 +1,5 @@
+//cd mobile (correr primero este en la terminal)
+//flutter pub add dio (correr esto de segundo en la terminal)
 import 'package:dio/dio.dart';
 import 'core/token_storage.dart';
 
