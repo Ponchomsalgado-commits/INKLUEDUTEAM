@@ -16,5 +16,7 @@ void main() {
   runApp(MaterialApp(
     navigatorKey: navigatorKey,
     home: const AuthGate(),
+
+    
   ));
 }
