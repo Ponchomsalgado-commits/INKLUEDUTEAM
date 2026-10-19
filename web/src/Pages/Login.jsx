@@ -4,15 +4,16 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
- 
-  const handleSubmit = (e) => {
+  const [cargando, setCargando] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
     setCargando(true);
 
 
     try {
-      login(email, password);
+      await login(email, password);
       setMensaje("Inicio de sesión correcto");
     } catch (error) {
       if (error.response?.status === 401) {
@@ -52,7 +53,9 @@ export default function Login() {
             required 
           />
         </div>
-        <button type="submit">Entrar</button>
+        <button type="submit" disabled={cargando}>
+          {cargando ? "Entrando..." : "Entrar"}
+        </button>
       </form>
       {mensaje && <p role="status">{mensaje}</p>}
     </div>

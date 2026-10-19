@@ -1,6 +1,7 @@
 import './App.css';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
+import MisSalones from './Pages/MisSalones';
 
 function App() {
   const ruta = window.location.pathname.replace(/\/+$/, '').toLowerCase() || '/';
@@ -15,11 +16,16 @@ function App() {
         <a href="/register">
           Registro
         </a>
+        <a href="/salones">
+          Mis salones
+        </a>
       </nav>
       {ruta === '/' || ruta === '/login' ? (
         <Login />
       ) : ruta === '/register' ? (
         <Register />
+      ) : ruta === '/salones' ? (
+        <MisSalones />
       ) : (
         <section className="not-found">
           <h2>Página no encontrada</h2>
