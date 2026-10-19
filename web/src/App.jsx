@@ -1,6 +1,7 @@
 import './App.css';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
+import MisSalones from './Pages/MisSalones';
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -12,11 +13,16 @@ function App() {
       <nav className="nav-buttons" aria-label="Navegación de cuenta">
         <a href="/login">Login</a>
         <a href="/register">Registro</a>
+        <a href="/salones">
+          Mis salones
+        </a>
       </nav>
       {ruta === '/' || ruta === '/login' ? (
         <Login />
       ) : ruta === '/register' ? (
         <Register />
+      ) : ruta === '/salones' ? (
+        <MisSalones />
       ) : (
         <section className="not-found">
           <h2>Página no encontrada</h2>
