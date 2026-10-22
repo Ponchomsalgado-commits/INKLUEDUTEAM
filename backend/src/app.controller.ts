@@ -7,11 +7,11 @@ export class AppController {
   
     @Get()
     async check () {
-        let database: 'conected' | 'down' = 'down';
+        let database: 'connected' | 'down' = 'down';
 
         try {
             await this.prisma.$queryRaw`SELECT 1`;
-            database = 'conected';
+            database = 'connected';
         } catch {
             database = 'down';
 
