@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Quitar usesCleartextTraffic cuando el backend tenga HTTPS -->
     <application
+        android:usesCleartextTraffic="true"
         android:label="inkledu_mobile"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

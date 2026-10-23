@@ -1,7 +1,56 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PROFESOR
+  ESTUDIANTE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  classroomsTaught     Classroom[]       @relation("TeacherClassrooms")
+  classroomMemberships ClassroomMember[] @relation("StudentMemberships")
+
+  @@map("users")
+}
+
+enum ClassroomType {
+  GRUPO
+  INDIVIDUAL
+}
+
+model Classroom {
+  id        String            @id @default(uuid())
+  teacherId String            @map("teacher_id")
+  teacher   User              @relation("TeacherClassrooms", fields: [teacherId], references: [id])
+  name      String
+  joinCode  String            @unique @map("join_code")
+  type      ClassroomType
+  createdAt DateTime          @default(now()) @map("created_at")
+  members   ClassroomMember[]
+
+  @@map("classrooms")
+}
+
+model ClassroomMember {
+  classroomId String   @map("classroom_id")
+  studentId   String   @map("student_id")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  classroom Classroom @relation(fields: [classroomId], references: [id])
+  student   User      @relation("StudentMemberships", fields: [studentId], references: [id])
+
+  @@id([classroomId, studentId])
+  @@map("classroom_members")
 }

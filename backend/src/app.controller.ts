@@ -1,21 +1,20 @@
 import { Controller, Get } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 
-@Controller ('health')
+@Controller('health')
 export class AppController {
-  constructor(private readonly prisma: PrismaService) {}  
-  
-    @Get()
-    async check () {
-        let database: 'conected' | 'down' = 'down';
+  constructor(private readonly prisma: PrismaService) {}
 
-        try {
-            await this.prisma.$queryRaw`SELECT 1`;
-            database = 'conected';
-        } catch {
-            database = 'down';
-
+  /** GET /api/v1/health — confirma que la API responde y que PostgreSQL acepta consultas. */
+  @Get()
+  async check() {
+    let database: 'connected' | 'down' = 'down';
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+      database = 'connected';
+    } catch {
+      database = 'down';
     }
     return { status: 'ok', database };
-    }
+  }
 }

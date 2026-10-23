@@ -1,7 +1,7 @@
 # === Variables de entorno ===
+# Los reales nunca se suben; solo el .env.example
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 
 # === Backend (NestJS / Node) ===

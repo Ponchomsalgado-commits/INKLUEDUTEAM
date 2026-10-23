@@ -1,0 +1,33 @@
+meta {
+  name: Crear salón
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/v1/classrooms
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "name": "3° A",
+    "type": "GRUPO"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("join_code", res.body.joinCode);
+  }
+}
+
+docs {
+  Solo PROFESOR (estudiante: 403). type: "GRUPO" (código de 6) o "INDIVIDUAL" (código de 5).
+  Guarda el código en join_code para "Unirse a salón".
+}
