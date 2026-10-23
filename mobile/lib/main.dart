@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'api_client.dart';
 import 'auth/auth_gate.dart';
 import 'auth/login_screen.dart';
@@ -13,8 +14,5 @@ void main() {
     );
   };
 
-  runApp(MaterialApp(
-    navigatorKey: navigatorKey,
-    home: const AuthGate(),
-  ));
+  runApp(MaterialApp(navigatorKey: navigatorKey, home: const AuthGate()));
 }

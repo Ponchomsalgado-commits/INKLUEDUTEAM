@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import '../api_client.dart';
 import '../core/token_storage.dart';
 import 'auth_service.dart';
@@ -37,8 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!email.contains('@')) {
       return 'Revisa que tu correo esté bien escrito.';
     }
-    if (pass.length < 8) {
-      return 'La contraseña debe tener al menos 8 caracteres.';
+    if (pass.length < AuthService.passwordMinLength) {
+      return 'La contraseña debe tener al menos '
+          '${AuthService.passwordMinLength} caracteres.';
     }
     if (pass != confirm) {
       return 'Las contraseñas no coinciden.';
@@ -65,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await _auth.register(email, pass);
       if (!mounted) return;
-      // Regresa al login avisando que todo salió bien _mensajeDeError
+      // La cuenta queda con sesión iniciada: directo a la pantalla principal
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
         (ruta) => false,
@@ -83,7 +85,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _mensajeDeError(DioException e) {
     final codigo = e.response?.statusCode;
-    if (codigo == 404) return 'Este servicio todavía no está disponible.';
     if (codigo == 409) return 'Ese correo ya tiene una cuenta.';
     if (codigo == 400) return 'Revisa tus datos e intenta de nuevo.';
     if (codigo == null) return 'No pudimos conectar. Intenta de nuevo.';
@@ -123,7 +124,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Contraseña',
-                    helperText: 'Mínimo 8 caracteres',
+                    helperText:
+                        'Mínimo ${AuthService.passwordMinLength} caracteres',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -157,8 +159,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             width: 24,
                             child: CircularProgressIndicator(strokeWidth: 3),
                           )
-                        : const Text('Registrarme',
-                            style: TextStyle(fontSize: 18)),
+                        : const Text(
+                            'Registrarme',
+                            style: TextStyle(fontSize: 18),
+                          ),
                   ),
                 ),
               ],
@@ -169,5 +173,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
-//navigator.pop

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import '../api_client.dart';
 import '../core/token_storage.dart';
 import 'auth_service.dart';
@@ -48,9 +49,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _auth.login(email, pass);
       if (!mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(
+      Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
         (ruta) => false,
+      );
+    } on RolNoPermitidoException {
+      if (!mounted) return;
+      setState(
+        () => _error = 'Esta cuenta es de profesor. Entra desde la página web.',
       );
     } on DioException catch (e) {
       if (!mounted) return;
@@ -146,5 +152,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-//snackbar
