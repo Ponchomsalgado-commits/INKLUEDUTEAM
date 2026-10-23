@@ -48,6 +48,7 @@ export default function Register() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="tucorreo@escuela.mx"
             autoComplete="email"
             required
           />

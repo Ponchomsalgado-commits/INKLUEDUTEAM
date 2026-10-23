@@ -113,7 +113,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
-                    labelText: 'Correo',
+                    labelText: 'Tucorreo@escuela.mx',
                     border: OutlineInputBorder(),
                   ),
                 ),
