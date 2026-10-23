@@ -1,0 +1,25 @@
+meta {
+  name: Unirse a salón
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/api/v1/classrooms/join
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{student_token}}
+}
+
+body:json {
+  {
+    "joinCode": "{{join_code}}"
+  }
+}
+
+docs {
+  Solo ESTUDIANTE. Código inexistente: 404. Ya inscrito: 409.
+}

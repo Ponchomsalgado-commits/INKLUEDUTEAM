@@ -1,0 +1,5 @@
+# Git normaliza los saltos de línea de los archivos de texto (en el repo se guardan con LF)
+* text=auto
+
+# Los scripts de shell deben tener LF también en Windows, o bash falla con "\r"
+*.sh text eol=lf

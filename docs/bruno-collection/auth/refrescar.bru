@@ -1,0 +1,28 @@
+meta {
+  name: Refrescar token
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/v1/auth/refrescar
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "refresh_token": "{{refresh_token}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("access_token", res.body.access_token);
+    bru.setVar("refresh_token", res.body.refresh_token);
+  }
+}
+
+docs {
+  Cambia el refresh_token por un par de tokens nuevo. Token inválido o caducado: 401.
+}

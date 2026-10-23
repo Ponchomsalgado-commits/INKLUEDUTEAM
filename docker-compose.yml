@@ -1,6 +1,11 @@
+# Entorno de DESARROLLO: API con recarga en caliente + PostgreSQL + MinIO.
+# Uso: docker compose up --build        (la web y el móvil se corren aparte, ver README)
+# Para servidor usa docker-compose.prod.yml.
 services:
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      target: development
     ports:
       - "3000:3000"
     env_file: .env
