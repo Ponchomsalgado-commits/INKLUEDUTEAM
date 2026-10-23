@@ -99,7 +99,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
-                    labelText: 'tucorreo@escuela.mx',
+                    labelText: 'Correo',
+                    hintText: 'tucorreo@escuela.mx',
                     border: OutlineInputBorder(),
                   ),
                 ),

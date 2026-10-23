@@ -10,6 +10,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
+    "postinstall": "prisma generate",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
