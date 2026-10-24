@@ -6,35 +6,28 @@ import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { JoinClassroomDto } from './dto/join-classroom.dto';
 
 // Alfabeto sin caracteres ambiguos: excluye 0/O, 1/I/L
-const CODE_CHARSET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+export const CODE_CHARSET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+
+// Longitud del código según el tipo (documento técnico, Sprint 2)
+export const CODE_LENGTH: Record<ClassroomType, number> = {
+  GRUPO: 6,
+  INDIVIDUAL: 5,
+};
 
 @Injectable()
 export class ClassroomsService {
   constructor(private readonly prisma: PrismaService) {}
 
   private generateCode(length: number): string {
-    let code = '';
-    for (let i = 0; i < length; i++) {
-      const index = randomInt(0, CODE_CHARSET.length);
-      code += CODE_CHARSET[index];
-    }
-    return code;
+    return Array.from({ length }, () => CODE_CHARSET[randomInt(0, CODE_CHARSET.length)]).join('');
   }
 
   private async generateUniqueJoinCode(type: ClassroomType): Promise<string> {
-    const length = type === 'GRUPO' ? 6 : 5;
-
+    // Reintenta hasta encontrar un código libre; la columna join_code es UNIQUE como respaldo
     let code: string;
-    let exists = true;
-
     do {
-      code = this.generateCode(length);
-      const existing = await this.prisma.classroom.findUnique({
-        where: { joinCode: code },
-      });
-      exists = !!existing;
-    } while (exists);
-
+      code = this.generateCode(CODE_LENGTH[type]);
+    } while (await this.prisma.classroom.findUnique({ where: { joinCode: code } }));
     return code;
   }
 

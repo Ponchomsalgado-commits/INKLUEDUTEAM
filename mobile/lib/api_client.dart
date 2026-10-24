@@ -1,20 +1,28 @@
-//cd mobile (correr primero este en la terminal)
-//flutter pub add dio (correr esto de segundo en la terminal)
 import 'package:dio/dio.dart';
+
 import 'core/token_storage.dart';
 
+/// Cliente HTTP único de la app. Agrega el access token a cada petición y,
+/// si caduca (401), lo renueva con el refresh token y repite la petición.
 class ApiClient {
   // Singleton: ApiClient() siempre devuelve la misma instancia
   static final ApiClient _instance = ApiClient._interno();
   factory ApiClient() => _instance;
 
-  // Emulador Android: http://10.0.2.2:3000
-  // Chrome / iOS: http://localhost:3000
-  // Celular físico: http://IP_DE_TU_PC:3000
-  static const _baseUrl = 'http://localhost:3000';
+  // Emulador Android: http://10.0.2.2:3000 (valor por defecto)
+  // Chrome / iOS: flutter run -d chrome --dart-define=API_URL=http://localhost:3000
+  // Celular físico: flutter run --dart-define=API_URL=http://IP_DE_TU_PC:3000
+  static const _baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://10.0.2.2:3000',
+  );
 
   // Rutas donde NO se manda token ni se intenta refrescar
-  static const _rutasPublicas = ['/auth/login', '/auth/registro', '/auth/refrescar'];
+  static const _rutasPublicas = [
+    '/auth/login',
+    '/auth/registro',
+    '/auth/refrescar',
+  ];
 
   final TokenStorage _storage = TokenStorage();
   final Dio dio;
@@ -25,15 +33,15 @@ class ApiClient {
   void Function()? onSessionExpired;
 
   static BaseOptions _opciones() => BaseOptions(
-        baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-        headers: {'Content-Type': 'application/json'},
-      );
+    baseUrl: _baseUrl,
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+    headers: {'Content-Type': 'application/json'},
+  );
 
   ApiClient._interno()
-      : dio = Dio(_opciones()),
-        _refreshDio = Dio(_opciones()) {
+    : dio = Dio(_opciones()),
+      _refreshDio = Dio(_opciones()) {
     dio.interceptors.add(
       InterceptorsWrapper(onRequest: _alEnviar, onError: _alFallar),
     );
@@ -122,5 +130,3 @@ class ApiClient {
     }
   }
 }
-
-//static

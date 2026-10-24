@@ -1,12 +1,22 @@
-import axios from "axios";
-import { getAccessToken, setAccessToken, clearAccessToken } from "../auth/tokenStore"; // AGREGADO: setAccessToken y clearAccessToken
+// Cliente HTTP único de la web. Todas las peticiones a la API pasan por aquí:
+// agrega el access_token y, si caduca (401), lo renueva con el refresh_token y repite la petición.
+import axios from 'axios';
+import {
+  clearAccessToken,
+  clearRefreshToken,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+} from '../auth/tokenStore';
+
+const REFRESH_PATH = '/auth/refrescar';
+// Rutas que nunca deben disparar un refresh (no usan token o son el refresh mismo)
+const RUTAS_PUBLICAS = ['/auth/login', '/auth/registro', REFRESH_PATH];
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
+  headers: { 'Content-Type': 'application/json' },
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -17,23 +27,22 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// ===== AGREGADO
+// Si varias peticiones fallan a la vez, todas esperan el mismo refresh
+let refreshPromise = null;
 
-const REFRESH_PATH = "/auth/refresh"; // TODO: confirmar la ruta real en el backend
-
-let refreshPromise = null; // evita pedir varios refresh al mismo tiempo
-
-async function refreshAccessToken() {
+function refreshAccessToken() {
   if (!refreshPromise) {
-    // axios.post normal (sin apiClient) para no caer en un ciclo infinito
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      return Promise.reject(new Error('No hay refresh token'));
+    }
+    // axios directo (no apiClient) para no caer en un ciclo de interceptores
     refreshPromise = axios
-      .post(`${import.meta.env.VITE_API_URL}${REFRESH_PATH}`, null, {
-        withCredentials: true,
-      })
-      .then((res) => {
-        const nuevoToken = res.data.access_token;
-        setAccessToken(nuevoToken);
-        return nuevoToken;
+      .post(`${apiClient.defaults.baseURL}${REFRESH_PATH}`, { refresh_token: refreshToken })
+      .then(({ data }) => {
+        setAccessToken(data.access_token);
+        if (data.refresh_token) setRefreshToken(data.refresh_token);
+        return data.access_token;
       })
       .finally(() => {
         refreshPromise = null;
@@ -43,31 +52,28 @@ async function refreshAccessToken() {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response, 
+  (response) => response,
   async (error) => {
-    const peticionOriginal = error.config;
-    const esLoginORegistro =
-      peticionOriginal.url?.includes("/auth/login") ||
-      peticionOriginal.url?.includes("/auth/registro") ||
-      peticionOriginal.url?.includes(REFRESH_PATH);
+    const peticion = error.config;
+    const esPublica = RUTAS_PUBLICAS.some((ruta) => peticion?.url?.includes(ruta));
 
-    
-    if (error.response?.status === 401 && !esLoginORegistro && !peticionOriginal._retry) {
-      peticionOriginal._retry = true;
-      try {
-        const nuevoToken = await refreshAccessToken();
-        peticionOriginal.headers.Authorization = `Bearer ${nuevoToken}`;
-        return apiClient(peticionOriginal); // repetimos la petición
-      } catch (e) {
-        clearAccessToken();
-        window.dispatchEvent(new Event("auth:logout")); // avisa a la app: "vuelve al login"
-        return Promise.reject(e);
-      }
+    if (error.response?.status !== 401 || esPublica || peticion._retry) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
+
+    peticion._retry = true;
+    try {
+      const nuevoToken = await refreshAccessToken();
+      peticion.headers.Authorization = `Bearer ${nuevoToken}`;
+      return apiClient(peticion);
+    } catch (refreshError) {
+      // La sesión ya no se puede renovar: se limpia y se avisa a la app para volver al login
+      clearAccessToken();
+      clearRefreshToken();
+      window.dispatchEvent(new Event('auth:logout'));
+      return Promise.reject(refreshError);
+    }
+  },
 );
-
-
 
 export default apiClient;

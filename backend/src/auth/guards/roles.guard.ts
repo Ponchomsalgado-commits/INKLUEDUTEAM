@@ -1,11 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
+/** Permite el acceso solo a los roles indicados con @Roles(). Debe ir después de JwtAuthGuard. */
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
@@ -18,9 +19,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
-
-    return requiredRoles.includes(user.role);
+    const { user } = context.switchToHttp().getRequest();
+    return !!user && requiredRoles.includes(user.role);
   }
 }
