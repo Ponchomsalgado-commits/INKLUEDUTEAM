@@ -21,6 +21,8 @@ export default function Register() {
       setMensaje('Registro completado correctamente');
       setEmail('');
       setPassword('');
+      // El registro ya deja la sesión iniciada (authService guarda los tokens)
+      window.location.assign('/salones');
     } catch (error) {
       if (error.response?.status === 409) {
         setMensaje('Ese correo ya tiene una cuenta.');

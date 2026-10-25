@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-
 import '../api_client.dart';
 import '../auth/auth_service.dart';
 import '../auth/login_screen.dart';
 import '../core/token_storage.dart';
+import '../salones/mis_salones_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -30,10 +30,23 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text(
-          'Página principal',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+        children: [
+            const Text(
+             'Pagina Principal',
+             style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const MisSalonesScreen()),
+  ),
+  child: const Text('Mis salones'),
+),
+     ],
         ),
       ),
     );
