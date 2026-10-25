@@ -36,7 +36,10 @@ export default function MisSalones() {
 
   useEffect(() => {
     obtenerMisSalones()
-      .then((data) => setSalones(data))
+     .then((data) => {
+      // Solo aceptamos arreglos; si no, usamos lista vacía
+      setSalones(Array.isArray(data) ? data : []);
+    })
       .catch((error) =>
         setErrorLista(mensajeDeError(error, "No se pudieron cargar tus salones"))
       )
