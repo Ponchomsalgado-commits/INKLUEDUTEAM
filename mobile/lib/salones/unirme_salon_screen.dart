@@ -25,8 +25,8 @@ Future<void> _unirme() async {
   });
 
 try{
-  await ApiClient().dio.post( '/api/v1/salones/unirse',
-  data: {'codigo': _codigoCtrl.text.trim().toUpperCase()},
+  await ApiClient().dio.post( '/api/v1/classrooms/join',
+  data: {'joinCode': _codigoCtrl.text.trim().toUpperCase()},
   );
 
   if(!mounted) return;
