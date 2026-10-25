@@ -1,7 +1,21 @@
 :root {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  background: #060606;
+  /* Paleta InkluEdu */
+  --azul-oscuro: #1f4a8a;
+  --azul-1: #2f6fae;
+  --azul-2: #3f8fc4;
+  --azul-3: #4fb3d6;
+  --fondo-1: #e8f0f6;
+  --fondo-2: #bad8de;
+  --fondo-3: #c2e6e2;
+  --texto: #24476b;
+  --texto-suave: #5b7891;
+  --borde: #cfe0ea;
+
+  --fuente-titulo: 'Fredoka', 'Nunito', sans-serif;
+
+  font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--texto);
+  background: var(--fondo-1);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,9 +31,11 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  background: var(--fondo-1);
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }

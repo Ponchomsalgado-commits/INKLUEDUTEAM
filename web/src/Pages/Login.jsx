@@ -5,6 +5,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
+//Se descarto setEsError ya que no se estaba utilizando en ninguna parte del código.
   const [cargando, setCargando] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -29,8 +30,9 @@ export default function Login() {
   };
 
   return (
-    <div className="login-container">
-      <h2>Iniciar sesión</h2>
+    <section className="tarjeta auth-card">
+      <h2>¡Hola! ¿Listo para aprender?</h2>
+      <p className="auth-subtitulo">Inicia sesión para continuar</p>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="login-email">Correo electrónico</label>
@@ -56,11 +58,19 @@ export default function Login() {
             required
           />
         </div>
-        <button type="submit" disabled={cargando}>
+        <button type="submit" className="btn-principal" disabled={cargando}>
+          <span aria-hidden="true">✏️</span>
           {cargando ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
-      {mensaje && <p role="status">{mensaje}</p>}
-    </div>
+      {mensaje && (
+        <p role="status" className={esError ? 'mensaje mensaje-error' : 'mensaje mensaje-ok'}>
+          {mensaje}
+        </p>
+      )}
+      <p className="auth-cambio">
+        ¿No tienes cuenta? <a href="/register">Regístrate</a>
+      </p>
+    </section>
   );
 }
