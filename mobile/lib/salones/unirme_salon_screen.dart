@@ -25,9 +25,10 @@ Future<void> _unirme() async {
   });
 
 try{
-  await ApiClient().dio.post( '/api/v1/classrooms/join',
+  await ApiClient().dio.post(
+  '/api/v1/classrooms/join',
   data: {'joinCode': _codigoCtrl.text.trim().toUpperCase()},
-  );
+);
 
   if(!mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(

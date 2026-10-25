@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
 import '../api_client.dart';
 import '../auth/auth_service.dart';
 import '../auth/login_screen.dart';
 import '../core/token_storage.dart';
-import '../salones/unirme_salon_screen.dart';
+import '../salones/mis_salones_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -41,12 +40,12 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => Navigator .push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const UnirmeSalonScreen()),
-        ),
-        child: const Text('Unirme a un salon'),
-      ),
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const MisSalonesScreen()),
+  ),
+  child: const Text('Mis salones'),
+),
      ],
         ),
       ),
