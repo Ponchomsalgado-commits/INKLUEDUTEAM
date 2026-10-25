@@ -5,18 +5,22 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
-//Se descarto setEsError ya que no se estaba utilizando en ninguna parte del código.
+  const [esError, setEsError] = useState(false);
   const [cargando, setCargando] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
+    setEsError(false);
     setCargando(true);
 
     try {
       await login(email, password);
       setMensaje('Inicio de sesión correcto');
+      // Recargar la página es seguro: apiClient renueva el access_token con el refresh_token
+      window.location.assign('/salones');
     } catch (error) {
+      setEsError(true);
       if (error.code === 'ROL_NO_PERMITIDO') {
         setMensaje('Esta cuenta es de estudiante. Inicia sesión desde la app móvil.');
       } else if (error.response?.status === 401) {
