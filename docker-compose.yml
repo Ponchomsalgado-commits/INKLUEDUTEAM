@@ -1,14 +1,19 @@
-
-
+# Entorno de DESARROLLO: API con recarga en caliente + PostgreSQL + MinIO.
+# Uso: docker compose up --build        (la web y el móvil se corren aparte, ver README)
+# Para servidor usa docker-compose.prod.yml.
 services:
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      target: development
     ports:
       - "3000:3000"
     env_file: .env
     depends_on:
-      - postgres
-      - minio
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
     volumes:
       - "./backend:/app"
       - "/app/node_modules"
@@ -23,6 +28,11 @@ services:
       - "5432:5432"
     volumes:
       - "pg_data:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   minio:
     image: bitnamilegacy/minio

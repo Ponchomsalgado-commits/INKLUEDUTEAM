@@ -6,6 +6,6 @@ export class CreateClassroomDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsEnum(ClassroomType, { message: 'Type must be GROUP or INDIVIDUAL' })
+  @IsEnum(ClassroomType, { message: 'Type must be GRUPO or INDIVIDUAL' })
   type!: ClassroomType;
 }

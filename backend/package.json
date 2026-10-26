@@ -1,19 +1,22 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "start": "nest start",
-    "start:dev": "nest start --watch"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "name": "inkluedu-backend",
+  "version": "0.1.0",
+  "description": "API REST de InkluEdu (NestJS + Prisma + PostgreSQL)",
+  "private": true,
+  "license": "UNLICENSED",
   "type": "commonjs",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main.js",
+    "postinstall": "prisma generate",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy"
+  },
   "dependencies": {
     "@nestjs/common": "^12.1.0",
     "@nestjs/config": "^12.0.1",
@@ -24,15 +27,29 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "prisma": "^6.19.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.7",
+    "@nestjs/testing": "^12.2.0",
     "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.6.3",
-    "prisma": "^6.19.3",
+    "jest": "^30.5.2",
+    "prettier": "^3.9.10",
+    "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": ".",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testEnvironment": "node"
   }
 }

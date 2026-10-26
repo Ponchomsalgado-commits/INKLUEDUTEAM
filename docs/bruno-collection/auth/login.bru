@@ -1,0 +1,29 @@
+meta {
+  name: Login
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/v1/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "profe@test.local",
+    "password": "Prueba123"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("access_token", res.body.access_token);
+    bru.setVar("refresh_token", res.body.refresh_token);
+  }
+}
+
+docs {
+  Respuesta: { access_token, refresh_token }. Credenciales incorrectas: 401.
+}

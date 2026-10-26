@@ -1,122 +1,74 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect } from 'react';
+import './App.css';
+import Login from './Pages/Login';
+import Register from './Pages/Register';
+import MisSalones from './Pages/MisSalones';
+import { logout } from './auth/authService';
+import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 
+// Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
+const RUTAS_SIN_SESION = ['/', '/login', '/register'];
+
+// Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
-  const [count, setCount] = useState(0)
+  const ruta = window.location.pathname.replace(/\/+$/, '').toLowerCase() || '/';
+  // Hay sesión si existe algún token; el backend sigue validando cada petición
+  const haySesion = Boolean(getAccessToken() || getRefreshToken());
+
+  // Ajusta la URL a lo que se muestra (sin recargar): con sesión, /salones; sin ella, /login
+  useEffect(() => {
+    if (haySesion && RUTAS_SIN_SESION.includes(ruta)) {
+      window.history.replaceState(null, '', '/salones');
+    } else if (!haySesion && ruta === '/salones') {
+      window.history.replaceState(null, '', '/login');
+    }
+  }, [haySesion, ruta]);
+
+  // apiClient lanza 'auth:logout' cuando la sesión ya no se puede renovar
+  useEffect(() => {
+    const volverAlLogin = () => window.location.assign('/login');
+    window.addEventListener('auth:logout', volverAlLogin);
+    return () => window.removeEventListener('auth:logout', volverAlLogin);
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
+    <main className="app-container">
+      <h1>InkluEdu</h1>
+      <nav className="nav-buttons" aria-label="Navegación de cuenta">
+        {haySesion ? (
+          <>
+            <a href="/salones">Mis salones</a>
+            {/* logout() corre antes de que el enlace navegue al login */}
+            <a href="/login" onClick={logout}>
+              Cerrar sesión
+            </a>
+          </>
+        ) : (
+          <>
+            <a href="/login">Login</a>
+            <a href="/register">Registro</a>
+          </>
+        )}
+      </nav>
+      {haySesion && RUTAS_SIN_SESION.includes(ruta) ? (
+        <MisSalones />
+      ) : ruta === '/' || ruta === '/login' ? (
+        <Login />
+      ) : ruta === '/register' ? (
+        <Register />
+      ) : ruta === '/salones' ? (
+        // Mis salones solo con sesión iniciada; sin ella se muestra el login
+        haySesion ? <MisSalones /> : <Login />
+      ) : (
+        <section className="not-found">
+          <h2>Página no encontrada</h2>
           <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+            Prueba las rutas <a href="/login">/login</a> o <a href="/register">/register</a>.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        </section>
+      )}
+    </main>
+  );
 }
 
-export default App
+export default App;

@@ -1,0 +1,19 @@
+meta {
+  name: Perfil
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/v1/auth/perfil
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+docs {
+  Devuelve el contenido del token: { sub, email, role, iat, exp }. Sin token: 401.
+}
