@@ -3,11 +3,14 @@ import './App.css';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
 import MisSalones from './Pages/MisSalones';
+import Tutorias from './Pages/Tutorias';
 import { logout } from './auth/authService';
 import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 
 // Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
 const RUTAS_SIN_SESION = ['/', '/login', '/register'];
+// Pantallas que requieren sesión; sin ella se muestra el login
+const RUTAS_CON_SESION = ['/salones', '/tutorias'];
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -19,7 +22,7 @@ function App() {
   useEffect(() => {
     if (haySesion && RUTAS_SIN_SESION.includes(ruta)) {
       window.history.replaceState(null, '', '/salones');
-    } else if (!haySesion && ruta === '/salones') {
+    } else if (!haySesion && RUTAS_CON_SESION.includes(ruta)) {
       window.history.replaceState(null, '', '/login');
     }
   }, [haySesion, ruta]);
@@ -38,6 +41,7 @@ function App() {
         {haySesion ? (
           <>
             <a href="/salones">Mis salones</a>
+            <a href="/tutorias">Tutorías</a>
             {/* logout() corre antes de que el enlace navegue al login */}
             <a href="/login" onClick={logout}>
               Cerrar sesión
@@ -59,6 +63,9 @@ function App() {
       ) : ruta === '/salones' ? (
         // Mis salones solo con sesión iniciada; sin ella se muestra el login
         haySesion ? <MisSalones /> : <Login />
+      ) : ruta === '/tutorias' ? (
+        // Tutorías solo con sesión iniciada; sin ella se muestra el login
+        haySesion ? <Tutorias /> : <Login />
       ) : (
         <section className="not-found">
           <h2>Página no encontrada</h2>

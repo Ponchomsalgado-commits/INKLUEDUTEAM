@@ -475,3 +475,51 @@ select:focus-visible {
     padding: 28px 22px;
   }
 }
+
+/* ===== Tutorías individuales ===== */
+.codigo-nuevo {
+  margin-bottom: 28px;
+  padding: 20px;
+  border: 2px dashed #23a4dc;
+  border-radius: 12px;
+  background: #f0f9ff;
+  text-align: center;
+}
+
+.codigo-nuevo p {
+  margin: 0 0 8px;
+  color: #475569;
+  font-size: 14px;
+}
+
+.codigo-nuevo .salon-codigo {
+  justify-content: center;
+}
+
+.salon-codigo code.codigo-grande {
+  padding: 8px 18px;
+  font-size: 32px;
+  letter-spacing: 8px;
+}
+
+.perfil-alumno {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.perfil-alumno dt {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.perfil-alumno dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
