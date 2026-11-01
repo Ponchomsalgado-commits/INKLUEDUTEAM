@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
-// T2101: llamadas al backend para la pantalla "Mis salones" (UsuarioP / profesor)
+//llamadas al backend para la pantalla "Mis salones" (UsuarioP / profesor)
 
 // POST /classrooms -> crea un salón. type: "GRUPO" | "INDIVIDUAL"
 export async function crearSalon({ name, type }) {

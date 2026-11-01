@@ -1,36 +1,17 @@
 import { useEffect, useState } from "react";
-import {
-  crearSalon,
-  obtenerMisSalones,
-  obtenerMiembros,
-} from "../services/classroomService";
+import { obtenerMisSalones, obtenerMiembros } from "../services/classroomService";
 
-// T2101: Pantalla "Mis salones": crear salón, ver código, ver lista de usuarios unidos.
-
-function mensajeDeError(error, porDefecto) {
-  if (error.response?.status === 401) return "Tu sesión expiró. Vuelve a iniciar sesión.";
-  if (error.response?.status === 403) return "Solo los profesores pueden gestionar salones.";
-  const errorBackend = error.response?.data?.message;
-  if (Array.isArray(errorBackend)) return errorBackend.join(", ");
-  return errorBackend || porDefecto;
-}
+// T2101: Pantalla "Mis salones": ver código y lista de usuarios unidos.
+// Crear un salón se hace en su propia pantalla (/salones/crear).
 
 export default function MisSalones() {
   const [salones, setSalones] = useState([]);
   const [cargandoSalones, setCargandoSalones] = useState(true);
-  const [errorLista, setErrorLista] = useState("");
-
-  // formulario de crear salón
-  const [nombre, setNombre] = useState("");
-  const [tipo, setTipo] = useState("GRUPO");
-  const [creando, setCreando] = useState(false);
-  const [mensajeCrear, setMensajeCrear] = useState("");
 
   // salón abierto y sus miembros
   const [salonAbierto, setSalonAbierto] = useState(null);
   const [miembros, setMiembros] = useState([]);
   const [cargandoMiembros, setCargandoMiembros] = useState(false);
-  const [errorMiembros, setErrorMiembros] = useState("");
 
   const [codigoCopiado, setCodigoCopiado] = useState("");
 
@@ -40,29 +21,10 @@ export default function MisSalones() {
       // Solo aceptamos arreglos; si no, usamos lista vacía
       setSalones(Array.isArray(data) ? data : []);
     })
-      .catch((error) =>
-        setErrorLista(mensajeDeError(error, "No se pudieron cargar tus salones"))
-      )
+      // Si la lista no se puede cargar se muestra como vacía en vez del error
+      .catch(() => setSalones([]))
       .finally(() => setCargandoSalones(false));
   }, []);
-
-  const handleCrear = async (e) => {
-    e.preventDefault();
-    setMensajeCrear("");
-    setCreando(true);
-
-    try {
-      const nuevo = await crearSalon({ name: nombre.trim(), type: tipo });
-      setSalones((prev) => [{ ...nuevo, _count: { members: 0 } }, ...prev]);
-      setMensajeCrear(`Salón creado. Código: ${nuevo.joinCode}`);
-      setNombre("");
-      setTipo("GRUPO");
-    } catch (error) {
-      setMensajeCrear(mensajeDeError(error, "No se pudo crear el salón"));
-    } finally {
-      setCreando(false);
-    }
-  };
 
   const handleVerMiembros = async (salon) => {
     if (salonAbierto === salon.id) {
@@ -72,14 +34,14 @@ export default function MisSalones() {
 
     setSalonAbierto(salon.id);
     setMiembros([]);
-    setErrorMiembros("");
     setCargandoMiembros(true);
 
     try {
       const data = await obtenerMiembros(salon.id);
-      setMiembros(data);
-    } catch (error) {
-      setErrorMiembros(mensajeDeError(error, "No se pudo cargar la lista de usuarios"));
+      setMiembros(Array.isArray(data) ? data : []);
+    } catch {
+      // Si la lista no se puede cargar se muestra "Sin miembros" en vez del error
+      setMiembros([]);
     } finally {
       setCargandoMiembros(false);
     }
@@ -96,42 +58,18 @@ export default function MisSalones() {
   };
 
   return (
-    <div className="salones-container">
-      <h2>Mis salones</h2>
-
-      <form className="crear-salon" onSubmit={handleCrear}>
-        <h3>Crear salón</h3>
-        <div className="form-group">
-          <label htmlFor="salon-nombre">Nombre del salón</label>
-          <input
-            id="salon-nombre"
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Ej. 3°A Matemáticas"
-            required
-          />
+    <div className="tarjeta salones-container salones-ancho">
+      <section aria-labelledby="lista-salones" className="seccion-salones">
+        <div className="encabezado-seccion">
+          <h2 id="lista-salones">Tus salones</h2>
+          <a href="/salones/crear" className="btn-crear">
+            + Crear salón
+          </a>
         </div>
-        <div className="form-group">
-          <label htmlFor="salon-tipo">Tipo</label>
-          <select id="salon-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-            <option value="GRUPO">Grupo</option>
-            <option value="INDIVIDUAL">Individual</option>
-          </select>
-        </div>
-        <button type="submit" disabled={creando || !nombre.trim()}>
-          {creando ? "Creando..." : "Crear salón"}
-        </button>
-        {mensajeCrear && <p role="status">{mensajeCrear}</p>}
-      </form>
-
-      <section aria-labelledby="lista-salones">
-        <h3 id="lista-salones">Tus salones</h3>
 
         {cargandoSalones && <p role="status">Cargando salones...</p>}
-        {errorLista && <p role="alert">{errorLista}</p>}
-        {!cargandoSalones && !errorLista && salones.length === 0 && (
-          <p>Aún no tienes salones. Crea el primero arriba.</p>
+        {!cargandoSalones && salones.length === 0 && (
+          <p className="sin-datos">No hay salones aún</p>
         )}
 
         <ul className="lista-salones">
@@ -165,9 +103,8 @@ export default function MisSalones() {
               {salonAbierto === salon.id && (
                 <div className="miembros">
                   {cargandoMiembros && <p role="status">Cargando usuarios...</p>}
-                  {errorMiembros && <p role="alert">{errorMiembros}</p>}
-                  {!cargandoMiembros && !errorMiembros && miembros.length === 0 && (
-                    <p>Todavía nadie se ha unido. Comparte el código {salon.joinCode}.</p>
+                  {!cargandoMiembros && miembros.length === 0 && (
+                    <p className="sin-datos">Sin miembros</p>
                   )}
                   {miembros.length > 0 && (
                     <ul>
@@ -185,6 +122,7 @@ export default function MisSalones() {
           ))}
         </ul>
       </section>
+
     </div>
   );
 }

@@ -3,6 +3,7 @@ import './App.css';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
 import MisSalones from './Pages/MisSalones';
+import CrearSalones from './Pages/CrearSalones';
 import Tutorias from './Pages/Tutorias';
 import { logout } from './auth/authService';
 import { getAccessToken, getRefreshToken } from './auth/tokenStore';
@@ -10,7 +11,7 @@ import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 // Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
 const RUTAS_SIN_SESION = ['/', '/login', '/register'];
 // Pantallas que requieren sesión; sin ella se muestra el login
-const RUTAS_CON_SESION = ['/salones', '/tutorias'];
+const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/tutorias'];
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -22,6 +23,7 @@ function App() {
   useEffect(() => {
     if (haySesion && RUTAS_SIN_SESION.includes(ruta)) {
       window.history.replaceState(null, '', '/salones');
+      window.history.replaceState(null, '', '/tutorias');
     } else if (!haySesion && RUTAS_CON_SESION.includes(ruta)) {
       window.history.replaceState(null, '', '/login');
     }
@@ -34,26 +36,52 @@ function App() {
     return () => window.removeEventListener('auth:logout', volverAlLogin);
   }, []);
 
-  return (
-    <main className="app-container">
-      <h1>InkluEdu</h1>
-      <nav className="nav-buttons" aria-label="Navegación de cuenta">
-        {haySesion ? (
-          <>
-            <a href="/salones">Mis salones</a>
-            <a href="/tutorias">Tutorías</a>
-            {/* logout() corre antes de que el enlace navegue al login */}
-            <a href="/login" onClick={logout}>
+  // Pestaña resaltada en el menú; la raíz con sesión y Crear salón cuentan como Mis salones
+  const rutaActiva =
+    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta === '/salones/crear' ? '/salones' : ruta;
+    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta === '/tutorias/crear' ? '/tutorias' : ruta;
+  const enlaceNav = (href, texto) => (
+    <a href={href} aria-current={rutaActiva === href ? 'page' : undefined}>
+      {texto}
+    </a>
+  );
+
+return (
+  <div className="app">
+    <header className="hero">
+      <div className="barra-superior">
+        <div>
+          {haySesion && (
+            <a
+              href="/login"
+              onClick={logout}
+              className="btn-cerrar-sesion"
+            >
               Cerrar sesión
             </a>
-          </>
-        ) : (
-          <>
-            <a href="/login">Login</a>
-            <a href="/register">Registro</a>
-          </>
-        )}
-      </nav>
+          )}
+        </div>
+
+        <nav className="nav-tabs" aria-label="Navegación principal">
+          {haySesion ? (
+            <>
+              {enlaceNav('/salones', 'Mis salones')}
+              {enlaceNav('/tutorias', 'Tutorías')}
+            </>
+          ) : (
+            <>
+              {enlaceNav('/login', 'Login')}
+              {enlaceNav('/register', 'Registro')}
+            </>
+          )}
+        </nav>
+      </div>
+
+      <h1>InkluEdu</h1>
+      <p>Aprender juntos, a tu ritmo</p>
+    </header>
+
+    <main className="contenido">
       {haySesion && RUTAS_SIN_SESION.includes(ruta) ? (
         <MisSalones />
       ) : ruta === '/' || ruta === '/login' ? (
@@ -61,21 +89,26 @@ function App() {
       ) : ruta === '/register' ? (
         <Register />
       ) : ruta === '/salones' ? (
-        // Mis salones solo con sesión iniciada; sin ella se muestra el login
         haySesion ? <MisSalones /> : <Login />
+      ) : ruta === '/salones/crear' ? (
+        haySesion ? <CrearSalones /> : <Login />
       ) : ruta === '/tutorias' ? (
-        // Tutorías solo con sesión iniciada; sin ella se muestra el login
         haySesion ? <Tutorias /> : <Login />
+      ) : ruta === '/salones/tutorias/crear' ? (
+        haySesion ? <CrearSalones /> : <Login />
       ) : (
-        <section className="not-found">
+        <section className="tarjeta not-found">
           <h2>Página no encontrada</h2>
           <p>
-            Prueba las rutas <a href="/login">/login</a> o <a href="/register">/register</a>.
+            Prueba las rutas <a href="/login">/login</a> o{' '}
+            <a href="/register">/register</a>.
           </p>
         </section>
       )}
     </main>
-  );
-}
 
+    <footer className="pie" />
+  </div>
+);
+}
 export default App;

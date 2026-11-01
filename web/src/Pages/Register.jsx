@@ -9,10 +9,12 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [esError, setEsError] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
+    setEsError(false);
     setCargando(true);
 
     try {
@@ -24,6 +26,7 @@ export default function Register() {
       // El registro ya deja la sesión iniciada (authService guarda los tokens)
       window.location.assign('/salones');
     } catch (error) {
+      setEsError(true);
       if (error.response?.status === 409) {
         setMensaje('Ese correo ya tiene una cuenta.');
       } else {
@@ -40,8 +43,9 @@ export default function Register() {
   };
 
   return (
-    <div className="register-container">
+    <section className="tarjeta auth-card">
       <h2>Crear cuenta de profesor</h2>
+      <p className="auth-subtitulo">Regístrate para gestionar tus salones</p>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="register-email">Correo electrónico</label>
@@ -68,12 +72,19 @@ export default function Register() {
             required
           />
         </div>
-        <button type="submit" disabled={cargando}>
+        <button type="submit" className="btn-principal" disabled={cargando}>
           {cargando ? 'Registrando...' : 'Registrarse'}
         </button>
       </form>
-      {mensaje && <p role="status">{mensaje}</p>}
-    </div>
+      {mensaje && (
+        <p role="status" className={esError ? 'mensaje mensaje-error' : 'mensaje mensaje-ok'}>
+          {mensaje}
+        </p>
+      )}
+      <p className="auth-cambio">
+        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+      </p>
+    </section>
   );
 }
 
