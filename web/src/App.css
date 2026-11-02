@@ -782,3 +782,93 @@ select:focus-visible {
   content: '• ';
   color: var(--azul-3);
 }
+
+.plantilla-usar {
+  margin-top: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: linear-gradient(110deg, var(--azul-1) 0%, var(--azul-3) 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.plantilla-usar:hover {
+  filter: brightness(1.08);
+}
+
+/* editor de actividad (TemplateEditor) */
+.editor-contador {
+  margin: 0 0 10px;
+  color: var(--texto-suave);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.editor-preguntas {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.editor-pregunta {
+  margin-bottom: 16px;
+  padding: 18px 20px 4px;
+  border: 2px solid var(--borde);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff 0%, #f0f8fc 100%);
+}
+
+.editor-pregunta-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.editor-pregunta-encabezado h4 {
+  margin: 0;
+  color: var(--azul-oscuro);
+}
+
+.editor-opciones {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.editor-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-opcion + .editor-opcion {
+  margin-top: 8px;
+}
+
+.form-group .editor-opcion input[type='radio'] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--azul-2);
+}
+
+.template-editor > button {
+  padding: 10px 20px;
+}
+
+.salones-container button.btn-secundario {
+  padding: 6px 14px;
+  border: 2px solid var(--borde);
+  background: #fff;
+  color: var(--azul-oscuro);
+  font-size: 13px;
+}
+
+.btn-guardar-actividad {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 18px;
+}

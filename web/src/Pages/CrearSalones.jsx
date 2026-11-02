@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { crearSalon } from "../services/classroomService";
-import { obtenerPlantillas } from "../services/templateService"; //(T3101) Servicio para obtener plantillas de minijuego desde el backend
+import { obtenerPlantillas } from "../services/activityService";
+import { mensajeDeError } from "../components/errorHandler";
 
 // Pantalla exclusiva para crear un salón y, debajo, el catálogo de plantillas.
 
+const ICONOS_SKIN = { rana_nenufar: "🐸", mariposa_flor: "🦋" };
 
-const ICONOS_SKIN = { rana: "🐸", mariposa: "🦋" };
-
-function mensajeDeError(error, porDefecto) {
-  if (error.response?.status === 401) return "Tu sesión expiró. Vuelve a iniciar sesión.";
-  if (error.response?.status === 403) return "Solo los profesores pueden gestionar salones.";
-  const errorBackend = error.response?.data?.message;
-  if (Array.isArray(errorBackend)) return errorBackend.join(", ");
-  return errorBackend || porDefecto;
+// Enlace al editor (CrearActividad); si ya se creó un salón, la actividad se publicará ahí
+function enlaceEditor(plantillaId, salon) {
+  const params = new URLSearchParams({ plantilla: plantillaId });
+  if (salon) {
+    params.set("salon", salon.id);
+    params.set("salonNombre", salon.name);
+  }
+  return `/salones/crear/actividad?${params}`;
 }
 
 export default function CrearSalones() {
@@ -130,7 +132,9 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
                   <li key={clave}>{campo.label}</li>
                 ))}
               </ul>
-              <span className="plantilla-estado">Próximamente</span>
+              <a href={enlaceEditor(plantilla.id, recienCreado)} className="plantilla-usar">
+                Usar plantilla
+              </a>
             </li>
           ))}
         </ul>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { crearSalon, obtenerMisSalones, obtenerMiembros } from '../services/classroomService';
+import { mensajeDeError } from '../components/errorHandler';
 
 // Tutorías individuales: crear tutoría (salón INDIVIDUAL), ver su código de 5 caracteres
 // y ver el perfil del UsuarioA unido.

@@ -4,6 +4,7 @@ import Login from './Pages/Login';
 import Register from './Pages/Register';
 import MisSalones from './Pages/MisSalones';
 import CrearSalones from './Pages/CrearSalones';
+import CrearActividad from './Pages/CrearActividad';
 import Tutorias from './Pages/Tutorias';
 import { logout } from './auth/authService';
 import { getAccessToken, getRefreshToken } from './auth/tokenStore';
@@ -11,7 +12,7 @@ import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 // Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
 const RUTAS_SIN_SESION = ['/', '/login', '/register'];
 // Pantallas que requieren sesión; sin ella se muestra el login
-const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/tutorias'];
+const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/tutorias'];
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -38,7 +39,7 @@ function App() {
 
   // Pestaña resaltada en el menú; la raíz con sesión y Crear salón cuentan como Mis salones
   const rutaActiva =
-    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta === '/salones/crear' ? '/salones' : ruta;
+    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta.startsWith('/salones/crear') ? '/salones' : ruta;
     (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta === '/tutorias/crear' ? '/tutorias' : ruta;
   const enlaceNav = (href, texto) => (
     <a href={href} aria-current={rutaActiva === href ? 'page' : undefined}>
@@ -92,6 +93,8 @@ return (
         haySesion ? <MisSalones /> : <Login />
       ) : ruta === '/salones/crear' ? (
         haySesion ? <CrearSalones /> : <Login />
+      ) : ruta === '/salones/crear/actividad' ? (
+        haySesion ? <CrearActividad /> : <Login />
       ) : ruta === '/tutorias' ? (
         haySesion ? <Tutorias /> : <Login />
       ) : ruta === '/salones/tutorias/crear' ? (
