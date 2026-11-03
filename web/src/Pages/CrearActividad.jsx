@@ -1,19 +1,38 @@
 import { useEffect, useState } from "react";
 import TemplateEditor from "../components/TemplateEditor";
 import SubirMaterial from "../components/SubirMaterial";
+import { materialDesdeUrl } from "../components/materialUtils";
 import { preguntaVacia } from "../components/preguntaVacia";
-import { obtenerPlantillas, crearActividad, publicarActividad } from "../services/activityService";
+import {
+  obtenerPlantillas,
+  obtenerActividad,
+  crearActividad,
+  editarActividad,
+  publicarActividad,
+} from "../services/activityService";
 import { validarPreguntas } from "../components/validarPreguntas";
 import { mensajeDeError } from "../components/errorHandler";
 
 // Pantalla para editar una copia de la plantilla elegida en /salones/crear y,
 // al guardar, publicarla en el salón recién creado..
+// Con ?actividad=ID (desde "Mis actividades") edita esa actividad propia en vez de crear otra.
+
+// Plantilla de origen de una actividad: por id y, si el catálogo cambió, por type + skin
+function plantillaDeActividad(plantillas, actividad) {
+  const { type, skin } = actividad.content_json ?? {};
+  return (
+    plantillas.find((p) => String(p.id) === String(actividad.template_id)) ??
+    plantillas.find((p) => p.type === type && p.skin === skin)
+  );
+}
 
 export default function CrearActividad() {
   const params = new URLSearchParams(window.location.search);
   const plantillaId = params.get("plantilla");
+  const actividadId = params.get("actividad");
   const salonId = params.get("salon");
   const salonNombre = params.get("salonNombre");
+  const esEdicion = Boolean(actividadId);
 
   const [plantilla, setPlantilla] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -28,27 +47,44 @@ export default function CrearActividad() {
   const [actividadCreada, setActividadCreada] = useState(null);
 
   useEffect(() => {
-    obtenerPlantillas()
-      .then((plantillas) => {
-        const elegida = plantillas.find((p) => String(p.id) === plantillaId);
-        if (!elegida) return;
-        // Se edita una copia: el estado arranca vacío y la plantilla original no se toca
-        const schemaPreguntas = elegida.schema_json.fields.preguntas;
-        const totalOpciones = schemaPreguntas.items.opciones.minItems ?? 3;
-        setPlantilla(elegida);
-        setTitulo(elegida.display_name);
-        setPreguntas(
-          Array.from({ length: schemaPreguntas.minItems ?? 1 }, (_, i) =>
-            preguntaVacia(`q${i + 1}`, totalOpciones),
-          ),
-        );
-      })
+    const cargar = async () => {
+      const plantillas = await obtenerPlantillas();
+
+      if (esEdicion) {
+        const actividad = await obtenerActividad(actividadId);
+        const origen = plantillaDeActividad(plantillas, actividad);
+        if (!origen) return;
+        setPlantilla(origen);
+        setTitulo(actividad.title);
+        setPreguntas(actividad.content_json?.preguntas ?? []);
+        setMateriales((actividad.media_urls ?? []).map(materialDesdeUrl));
+        return;
+      }
+
+      const elegida = plantillas.find((p) => String(p.id) === plantillaId);
+      if (!elegida) return;
+      // Se edita una copia: el estado arranca vacío y la plantilla original no se toca
+      const schemaPreguntas = elegida.schema_json.fields.preguntas;
+      const totalOpciones = schemaPreguntas.items.opciones.minItems ?? 3;
+      setPlantilla(elegida);
+      setTitulo(elegida.display_name);
+      setPreguntas(
+        Array.from({ length: schemaPreguntas.minItems ?? 1 }, (_, i) =>
+          preguntaVacia(`q${i + 1}`, totalOpciones),
+        ),
+      );
+    };
+
+    // Si la actividad no se puede cargar se muestra "No encontramos..." en vez del error
+    cargar()
+      .catch(() => setPlantilla(null))
       .finally(() => setCargando(false));
-  }, [plantillaId]);
+  }, [plantillaId, actividadId, esEdicion]);
 
   const handleGuardar = async (e) => {
     e.preventDefault();
     setError("");
+    setResultado(null);
 
     const errorPreguntas = validarPreguntas(preguntas);
     if (errorPreguntas) {
@@ -64,16 +100,21 @@ export default function CrearActividad() {
       return;
     }
 
+    const datos = {
+      title: titulo.trim(),
+      content: { type: plantilla.type, skin: plantilla.skin, preguntas },
+      mediaUrls: materiales.map((m) => m.url),
+    };
+
     setGuardando(true);
     try {
-      const actividad =
-        actividadCreada ??
-        (await crearActividad({
-          templateId: plantilla.id,
-          title: titulo.trim(),
-          content: { type: plantilla.type, skin: plantilla.skin, preguntas },
-          mediaUrls: materiales.map((m) => m.url),
-        }));
+      if (esEdicion) {
+        await editarActividad(actividadId, datos);
+        setResultado({ titulo: datos.title, mensaje: "guardada" });
+        return;
+      }
+
+      const actividad = actividadCreada ?? (await crearActividad({ templateId: plantilla.id, ...datos }));
       setActividadCreada(actividad);
       if (salonId) {
         await publicarActividad({
@@ -82,7 +123,7 @@ export default function CrearActividad() {
           dueDate: new Date(fechaLimite).toISOString(),
         });
       }
-      setResultado({ titulo: titulo.trim(), publicada: Boolean(salonId) });
+      setResultado({ titulo: datos.title, mensaje: salonId ? "publicada en el salón" : "guardada" });
     } catch (err) {
       setError(mensajeDeError(err, "No se pudo guardar la actividad"));
     } finally {
@@ -90,10 +131,20 @@ export default function CrearActividad() {
     }
   };
 
+  const enlaceVolver = esEdicion ? (
+    <a href="/actividades" className="enlace-volver">
+      ← Volver a Mis actividades
+    </a>
+  ) : (
+    <a href="/salones/crear" className="enlace-volver">
+      ← Volver a Crear salón
+    </a>
+  );
+
   if (cargando) {
     return (
       <div className="tarjeta salones-container salones-ancho">
-        <p role="status">Cargando plantilla...</p>
+        <p role="status">{esEdicion ? "Cargando actividad..." : "Cargando plantilla..."}</p>
       </div>
     );
   }
@@ -101,26 +152,30 @@ export default function CrearActividad() {
   if (!plantilla) {
     return (
       <div className="tarjeta salones-container salones-ancho">
-        <a href="/salones/crear" className="enlace-volver">
-          ← Volver a Crear salón
-        </a>
-        <p className="sin-datos">No encontramos esa plantilla. Elige una del catálogo.</p>
+        {enlaceVolver}
+        <p className="sin-datos">
+          {esEdicion
+            ? "No encontramos esa actividad."
+            : "No encontramos esa plantilla. Elige una del catálogo."}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="tarjeta salones-container salones-ancho">
-      <a href="/salones/crear" className="enlace-volver">
-        ← Volver a Crear salón
-      </a>
+      {enlaceVolver}
 
       <form className="crear-actividad" onSubmit={handleGuardar}>
-        <h2>Nueva actividad: {plantilla.display_name}</h2>
+        <h2>
+          {esEdicion ? "Editar actividad" : "Nueva actividad"}: {plantilla.display_name}
+        </h2>
         <p className="catalogo-subtitulo">
-          {salonId
-            ? `Al guardar se publicará en el salón "${salonNombre ?? salonId}".`
-            : "Al guardar quedará en tus actividades. Crea un salón primero para publicarla."}
+          {esEdicion
+            ? "Los cambios se guardan en tu copia; la plantilla original no se modifica."
+            : salonId
+              ? `Al guardar se publicará en el salón "${salonNombre ?? salonId}".`
+              : "Al guardar quedará en tus actividades. Crea un salón primero para publicarla."}
         </p>
 
         <div className="form-group">
@@ -142,7 +197,7 @@ export default function CrearActividad() {
 
         <SubirMaterial materiales={materiales} onChange={setMateriales} />
 
-        {salonId && (
+        {salonId && !esEdicion && (
           <div className="form-group">
             <label htmlFor="actividad-fecha">Fecha límite</label>
             <input
@@ -158,12 +213,23 @@ export default function CrearActividad() {
         {error && <p role="alert">{error}</p>}
         {resultado && (
           <p role="status">
-            Actividad "{resultado.titulo}" {resultado.publicada ? "publicada en el salón" : "guardada"}.
+            Actividad "{resultado.titulo}" {resultado.mensaje}.{" "}
+            <a href="/actividades">Ver mis actividades</a>
           </p>
         )}
 
-        <button type="submit" className="btn-guardar-actividad" disabled={guardando || Boolean(resultado) || !titulo.trim()}>
-          {guardando ? "Guardando..." : salonId ? "Guardar y publicar" : "Guardar actividad"}
+        <button
+          type="submit"
+          className="btn-guardar-actividad"
+          disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
+        >
+          {guardando
+            ? "Guardando..."
+            : esEdicion
+              ? "Guardar cambios"
+              : salonId
+                ? "Guardar y publicar"
+                : "Guardar actividad"}
         </button>
       </form>
     </div>

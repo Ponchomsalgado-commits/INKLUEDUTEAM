@@ -5,6 +5,7 @@ import Register from './Pages/Register';
 import MisSalones from './Pages/MisSalones';
 import CrearSalones from './Pages/CrearSalones';
 import CrearActividad from './Pages/CrearActividad';
+import MisActividades from './Pages/MisActividades';
 import Tutorias from './Pages/Tutorias';
 import { logout } from './auth/authService';
 import { getAccessToken, getRefreshToken } from './auth/tokenStore';
@@ -12,7 +13,7 @@ import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 // Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
 const RUTAS_SIN_SESION = ['/', '/login', '/register'];
 // Pantallas que requieren sesión; sin ella se muestra el login
-const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/tutorias'];
+const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/actividades', '/actividades/editar', '/tutorias'];
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -24,7 +25,6 @@ function App() {
   useEffect(() => {
     if (haySesion && RUTAS_SIN_SESION.includes(ruta)) {
       window.history.replaceState(null, '', '/salones');
-      window.history.replaceState(null, '', '/tutorias');
     } else if (!haySesion && RUTAS_CON_SESION.includes(ruta)) {
       window.history.replaceState(null, '', '/login');
     }
@@ -37,10 +37,14 @@ function App() {
     return () => window.removeEventListener('auth:logout', volverAlLogin);
   }, []);
 
-  // Pestaña resaltada en el menú; la raíz con sesión y Crear salón cuentan como Mis salones
+  // Pestaña resaltada en el menú; la raíz con sesión y Crear salón cuentan como Mis salones,
+  // y Editar actividad cuenta como Mis actividades
   const rutaActiva =
-    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta.startsWith('/salones/crear') ? '/salones' : ruta;
-    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta === '/tutorias/crear' ? '/tutorias' : ruta;
+    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta.startsWith('/salones/crear')
+      ? '/salones'
+      : ruta.startsWith('/actividades')
+        ? '/actividades'
+        : ruta;
   const enlaceNav = (href, texto) => (
     <a href={href} aria-current={rutaActiva === href ? 'page' : undefined}>
       {texto}
@@ -67,6 +71,7 @@ return (
           {haySesion ? (
             <>
               {enlaceNav('/salones', 'Mis salones')}
+              {enlaceNav('/actividades', 'Mis actividades')}
               {enlaceNav('/tutorias', 'Tutorías')}
             </>
           ) : (
@@ -94,6 +99,10 @@ return (
       ) : ruta === '/salones/crear' ? (
         haySesion ? <CrearSalones /> : <Login />
       ) : ruta === '/salones/crear/actividad' ? (
+        haySesion ? <CrearActividad /> : <Login />
+      ) : ruta === '/actividades' ? (
+        haySesion ? <MisActividades /> : <Login />
+      ) : ruta === '/actividades/editar' ? (
         haySesion ? <CrearActividad /> : <Login />
       ) : ruta === '/tutorias' ? (
         haySesion ? <Tutorias /> : <Login />

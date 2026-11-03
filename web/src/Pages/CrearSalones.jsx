@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { crearSalon } from "../services/classroomService";
 import { obtenerPlantillas } from "../services/activityService";
 import { mensajeDeError } from "../components/errorHandler";
+import { ICONOS_SKIN } from "../components/iconosSkin";
 
 // Pantalla exclusiva para crear un salón y, debajo, el catálogo de plantillas.
-
-const ICONOS_SKIN = { rana_nenufar: "🐸", mariposa_flor: "🦋" };
 
 // Enlace al editor (CrearActividad); si ya se creó un salón, la actividad se publicará ahí
 function enlaceEditor(plantillaId, salon) {

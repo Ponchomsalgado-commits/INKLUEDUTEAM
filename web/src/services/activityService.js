@@ -71,6 +71,31 @@ export async function crearActividad({ templateId, title, content, mediaUrls = [
   return response.data;
 }
 
+// GET /activities/mine -> actividades propias del UsuarioP ("mis actividades").
+// Misma convención que /classrooms/mine.
+// Respuesta: array de { id, template_id, title, content_json, media_urls, created_at }.
+// Pendiente en backend: hoy no existe esta ruta, así que responde 404 hasta que se implemente.
+export async function obtenerMisActividades() {
+  const response = await apiClient.get("/activities/mine");
+  return response.data;
+}
+
+// GET /activities/:id -> una actividad propia completa (con las respuestas correctas) para editarla.
+export async function obtenerActividad(id) {
+  const response = await apiClient.get(`/activities/${id}`);
+  return response.data;
+}
+
+// PATCH /activities/:id -> edita una actividad propia; la plantilla original nunca se toca.
+export async function editarActividad(id, { title, content, mediaUrls = [] }) {
+  const response = await apiClient.patch(`/activities/${id}`, {
+    title,
+    content_json: content,
+    media_urls: mediaUrls,
+  });
+  return response.data;
+}
+
 // POST /assignments -> publica una actividad en un salón o tutoría con fecha límite.
 //Endpoint del sprint 4
 export async function publicarActividad({ activityId, classroomId, dueDate }) {
