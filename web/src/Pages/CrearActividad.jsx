@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import TemplateEditor from "../components/TemplateEditor";
+import SubirMaterial from "../components/SubirMaterial";
 import { preguntaVacia } from "../components/preguntaVacia";
 import { obtenerPlantillas, crearActividad, publicarActividad } from "../services/activityService";
 import { validarPreguntas } from "../components/validarPreguntas";
@@ -18,6 +19,7 @@ export default function CrearActividad() {
   const [cargando, setCargando] = useState(true);
   const [titulo, setTitulo] = useState("");
   const [preguntas, setPreguntas] = useState([]);
+  const [materiales, setMateriales] = useState([]);
   const [fechaLimite, setFechaLimite] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,14 @@ export default function CrearActividad() {
       setError(errorPreguntas);
       return;
     }
+    if (materiales.some((m) => m.estado === "subiendo")) {
+      setError("Espera a que termine de subirse el material.");
+      return;
+    }
+    if (materiales.some((m) => m.estado === "error")) {
+      setError("Reintenta o quita los archivos que no se pudieron subir.");
+      return;
+    }
 
     setGuardando(true);
     try {
@@ -62,6 +72,7 @@ export default function CrearActividad() {
           templateId: plantilla.id,
           title: titulo.trim(),
           content: { type: plantilla.type, skin: plantilla.skin, preguntas },
+          mediaUrls: materiales.map((m) => m.url),
         }));
       setActividadCreada(actividad);
       if (salonId) {
@@ -128,6 +139,8 @@ export default function CrearActividad() {
           preguntas={preguntas}
           onChange={setPreguntas}
         />
+
+        <SubirMaterial materiales={materiales} onChange={setMateriales} />
 
         {salonId && (
           <div className="form-group">

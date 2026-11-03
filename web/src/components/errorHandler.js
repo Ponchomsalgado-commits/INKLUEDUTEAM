@@ -16,4 +16,7 @@ export function mensajeDeError(error, porDefecto) {
   const msgBackend = error.response?.data?.message;
   if (Array.isArray(msgBackend)) return msgBackend.join(", ");
   if (typeof msgBackend === "string") return msgBackend;
+
+  // Sin respuesta del servidor (red caída) o error sin mensaje
+  return porDefecto;
 }

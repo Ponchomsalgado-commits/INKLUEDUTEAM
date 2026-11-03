@@ -59,12 +59,14 @@ export async function obtenerPlantillas() {
 // POST /activities -> crea una actividad propia a partir de una plantilla.
 // La plantilla original nunca se modifica: el backend guarda una copia en "mis actividades".
 // content_json: { type, skin, preguntas: [{ id, pregunta, opciones: [{ texto, correcta }] }] }
+// media_urls: referencias devueltas por POST /media/upload (ver mediaService.js)
 // Pendiente en backend: hoy no existe esta ruta, así que responde 404 hasta que se implemente.
-export async function crearActividad({ templateId, title, content }) {
+export async function crearActividad({ templateId, title, content, mediaUrls = [] }) {
   const response = await apiClient.post("/activities", {
     template_id: templateId,
     title,
     content_json: content,
+    media_urls: mediaUrls,
   });
   return response.data;
 }
