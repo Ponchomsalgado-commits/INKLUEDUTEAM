@@ -18,6 +18,8 @@
     "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1160.0",
+    "@aws-sdk/s3-request-presigner": "^3.1160.0",
     "@nestjs/common": "^12.1.0",
     "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.1.0",
@@ -44,7 +46,11 @@
     "typescript": "^6.0.3"
   },
   "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
