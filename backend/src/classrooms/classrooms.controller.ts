@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -26,5 +26,18 @@ export class ClassroomsController {
   @Roles(Role.ESTUDIANTE)
   join(@CurrentUser() user: JwtPayload, @Body() dto: JoinClassroomDto) {
     return this.classroomsService.join(user.sub, dto);
+  }
+
+  /** GET /api/v1/classrooms/mine — profesor: sus salones; estudiante: a los que se unió. */
+  @Get('mine')
+  mine(@CurrentUser() user: JwtPayload) {
+    return this.classroomsService.listMine(user.sub, user.role);
+  }
+
+  /** GET /api/v1/classrooms/:id/members — profesor dueño del salón: quién está unido. */
+  @Get(':id/members')
+  @Roles(Role.PROFESOR)
+  members(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.classroomsService.listMembers(user.sub, id);
   }
 }

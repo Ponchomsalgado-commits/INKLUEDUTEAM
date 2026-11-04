@@ -64,9 +64,20 @@ describe('validateContent (seleccionar_objetivo)', () => {
     expect(errorDe({ preguntas: demasiadas }).message).toContain('como máximo 10');
   });
 
-  it('exige el número de opciones que define la plantilla', () => {
-    const e = errorDe({ preguntas: [{ pregunta: 'X', opciones: opciones([true, false]) }] });
+  it('acepta de 2 a 5 opciones por pregunta', () => {
+    expect(() => validar({ preguntas: [{ pregunta: 'X', opciones: opciones([true, false]) }] })).not.toThrow();
+    expect(() =>
+      validar({ preguntas: [{ pregunta: 'X', opciones: opciones([true, false, false, false, false]) }] }),
+    ).not.toThrow();
+  });
+
+  it('rechaza una pregunta con 1 opción o con más de 5', () => {
+    expect(errorDe({ preguntas: [{ pregunta: 'X', opciones: opciones([true]) }] }).field).toBe('preguntas[0].opciones');
+    const e = errorDe({
+      preguntas: [{ pregunta: 'X', opciones: opciones([true, false, false, false, false, false]) }],
+    });
     expect(e.field).toBe('preguntas[0].opciones');
+    expect(e.message).toContain('como máximo 5');
   });
 
   it('rechaza textos vacíos, demasiado largos y tipos incorrectos', () => {

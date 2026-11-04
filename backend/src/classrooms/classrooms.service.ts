@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { randomInt } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { ClassroomType } from '@prisma/client';
+import { ClassroomType, Role } from '@prisma/client';
 import { CreateClassroomDto } from './dto/create-classroom.dto';
 import { JoinClassroomDto } from './dto/join-classroom.dto';
 
@@ -71,6 +71,41 @@ export class ClassroomsService {
         classroomId: classroom.id,
         studentId,
       },
+    });
+  }
+
+  /** Profesor: los salones que creó. Estudiante: los salones a los que se unió. */
+  async listMine(userId: string, role: Role) {
+    if (role === Role.PROFESOR) {
+      return this.prisma.classroom.findMany({
+        where: { teacherId: userId },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    const memberships = await this.prisma.classroomMember.findMany({
+      where: { studentId: userId },
+      include: { classroom: true },
+      orderBy: { joinedAt: 'desc' },
+    });
+    return memberships.map((m) => m.classroom);
+  }
+
+  /** Solo el dueño del salón ve sus miembros; para otro profesor es 404. Nunca se devuelve passwordHash. */
+  async listMembers(teacherId: string, classroomId: string) {
+    const classroom = await this.prisma.classroom.findFirst({
+      where: { id: classroomId, teacherId },
+    });
+    if (!classroom) {
+      throw new NotFoundException('El salón no existe.');
+    }
+
+    return this.prisma.classroomMember.findMany({
+      where: { classroomId },
+      include: {
+        student: { select: { id: true, email: true, role: true, createdAt: true } },
+      },
+      orderBy: { joinedAt: 'asc' },
     });
   }
 }

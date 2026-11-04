@@ -25,8 +25,8 @@ export const SELECCIONAR_OBJETIVO_SCHEMA: TemplateSchema = {
           pregunta: { type: 'string', maxLength: 240 },
           opciones: {
             type: 'array',
-            minItems: 3,
-            maxItems: 3,
+            minItems: 2, // de 2 a 5 opciones por pregunta (decisión del equipo)
+            maxItems: 5,
             exactlyOne: 'correcta', // exactamente una correcta POR pregunta
             items: {
               type: 'object',
