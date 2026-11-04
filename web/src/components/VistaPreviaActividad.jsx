@@ -1,11 +1,12 @@
-import { ICONOS_MATERIAL, nombreDeUrl, tipoDeMaterial } from "./materialUtils";
+import { ICONOS_MATERIAL, tipoDeMaterial } from "./materialUtils";
 
-// Vista previa de solo lectura de una actividad propia: material adjunto y preguntas
-// con la respuesta correcta marcada. La vista del UsuarioA (sin respuestas) es del sprint 4.
+// Vista previa de solo lectura de una actividad propia (detalle de GET /activities/:id):
+// material adjunto y preguntas con la respuesta correcta marcada.
+// La vista del UsuarioA (sin respuestas) es del sprint 4.
 
 export default function VistaPreviaActividad({ actividad }) {
-  const preguntas = actividad.content_json?.preguntas ?? [];
-  const material = actividad.media_urls ?? [];
+  const preguntas = actividad.contentJson?.preguntas ?? [];
+  const material = actividad.media ?? [];
 
   return (
     <div className="vista-previa">
@@ -13,11 +14,10 @@ export default function VistaPreviaActividad({ actividad }) {
         <>
           <h4>Material</h4>
           <ul className="vista-previa-material">
-            {material.map((url) => (
-              <li key={url}>
-                <a href={url} target="_blank" rel="noreferrer">
-                  <span aria-hidden="true">{ICONOS_MATERIAL[tipoDeMaterial(nombreDeUrl(url))]}</span>{" "}
-                  {nombreDeUrl(url)}
+            {material.map((m) => (
+              <li key={m.key}>
+                <a href={m.url} target="_blank" rel="noreferrer">
+                  <span aria-hidden="true">{ICONOS_MATERIAL[tipoDeMaterial(m.name)]}</span> {m.name}
                 </a>
               </li>
             ))}

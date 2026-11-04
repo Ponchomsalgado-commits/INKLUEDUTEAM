@@ -123,12 +123,14 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
               <span className="plantilla-icono" aria-hidden="true">
                 {ICONOS_SKIN[plantilla.skin] ?? "🎮"}
               </span>
-              <strong>{plantilla.display_name}</strong>
+              <strong>{plantilla.displayName}</strong>
               <span className="salon-tipo">{plantilla.type}</span>
-             
+
               <ul className="plantilla-campos">
-                {Object.entries(plantilla.schema_json?.fields ?? {}).map(([clave, campo]) => (
-                  <li key={clave}>{campo.label}</li>
+                {Object.entries(plantilla.schemaJson?.fields ?? {}).map(([clave, campo]) => (
+                  <li key={clave}>
+                    {campo.type === "array" ? `${clave}: de ${campo.minItems} a ${campo.maxItems}` : clave}
+                  </li>
                 ))}
               </ul>
               <a href={enlaceEditor(plantilla.id, recienCreado)} className="plantilla-usar">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { obtenerMisActividades, obtenerPlantillas } from "../services/activityService";
+import { obtenerActividad, obtenerMisActividades } from "../services/activityService";
 import VistaPreviaActividad from "../components/VistaPreviaActividad";
+import { mensajeDeError } from "../components/errorHandler";
 import { ICONOS_SKIN } from "../components/iconosSkin";
 
 // T3104: Pantalla "Mis actividades": copias propias de plantillas, con opción de editar o previsualizar.
@@ -12,35 +13,38 @@ function formatearFecha(fecha) {
 
 export default function MisActividades() {
   const [actividades, setActividades] = useState([]);
-  const [plantillas, setPlantillas] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  // actividad con la vista previa abierta
-  const [previaAbierta, setPreviaAbierta] = useState(null);
+  // Vista previa abierta: { id, detalle, error }. El detalle (preguntas) se pide solo al abrirla.
+  const [previa, setPrevia] = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      // Si la lista no se puede cargar se muestra como vacía en vez del error
-      obtenerMisActividades().catch(() => []),
-      obtenerPlantillas(),
-    ])
-      .then(([data, catalogo]) => {
-        // Solo aceptamos arreglos; si no, usamos lista vacía
-        setActividades(Array.isArray(data) ? data : []);
-        setPlantillas(catalogo);
-      })
+    // Si la lista no se puede cargar se muestra como vacía en vez del error
+    obtenerMisActividades()
+      .then((data) => setActividades(Array.isArray(data) ? data : []))
+      .catch(() => setActividades([]))
       .finally(() => setCargando(false));
   }, []);
 
-  const nombrePlantilla = (actividad) => {
-    const { type, skin } = actividad.content_json ?? {};
-    const origen =
-      plantillas.find((p) => String(p.id) === String(actividad.template_id)) ??
-      plantillas.find((p) => p.type === type && p.skin === skin);
-    return origen?.display_name ?? skin ?? "Plantilla";
-  };
+  const togglePrevia = async (id) => {
+    if (previa?.id === id) {
+      setPrevia(null);
+      return;
+    }
 
-  const togglePrevia = (id) => setPreviaAbierta((abierta) => (abierta === id ? null : id));
+    setPrevia({ id, detalle: null, error: "" });
+    try {
+      const detalle = await obtenerActividad(id);
+      // Solo se aplica si sigue siendo la vista abierta (el usuario pudo cambiar de tarjeta)
+      setPrevia((abierta) => (abierta?.id === id ? { id, detalle, error: "" } : abierta));
+    } catch (err) {
+      setPrevia((abierta) =>
+        abierta?.id === id
+          ? { id, detalle: null, error: mensajeDeError(err, "No se pudo cargar la vista previa") }
+          : abierta,
+      );
+    }
+  };
 
   return (
     <div className="tarjeta salones-container salones-ancho">
@@ -62,23 +66,21 @@ export default function MisActividades() {
 
         <ul className="lista-salones">
           {actividades.map((actividad) => {
-            const totalPreguntas = actividad.content_json?.preguntas?.length ?? 0;
-            const totalMaterial = actividad.media_urls?.length ?? 0;
+            const abierta = previa?.id === actividad.id;
 
             return (
               <li key={actividad.id} className="salon-card actividad-card">
                 <div className="salon-info">
                   <strong>
-                    <span aria-hidden="true">{ICONOS_SKIN[actividad.content_json?.skin] ?? "🎮"} </span>
+                    <span aria-hidden="true">{ICONOS_SKIN[actividad.template.skin] ?? "🎮"} </span>
                     {actividad.title}
                   </strong>
-                  <span className="salon-tipo">{nombrePlantilla(actividad)}</span>
+                  <span className="salon-tipo">{actividad.template.displayName}</span>
                 </div>
 
                 <p className="actividad-detalle">
-                  {totalPreguntas} {totalPreguntas === 1 ? "pregunta" : "preguntas"} · {totalMaterial}{" "}
-                  {totalMaterial === 1 ? "archivo" : "archivos"} de material · creada el{" "}
-                  {formatearFecha(actividad.created_at)}
+                  {actividad.mediaCount} {actividad.mediaCount === 1 ? "archivo" : "archivos"} de material · creada el{" "}
+                  {formatearFecha(actividad.createdAt)}
                 </p>
 
                 <div className="actividad-acciones">
@@ -88,14 +90,21 @@ export default function MisActividades() {
                   <button
                     type="button"
                     className="ver-miembros"
-                    aria-expanded={previaAbierta === actividad.id}
+                    aria-expanded={abierta}
                     onClick={() => togglePrevia(actividad.id)}
                   >
-                    {previaAbierta === actividad.id ? "Ocultar vista previa" : "Previsualizar"}
+                    {abierta ? "Ocultar vista previa" : "Previsualizar"}
                   </button>
                 </div>
 
-                {previaAbierta === actividad.id && <VistaPreviaActividad actividad={actividad} />}
+                {abierta &&
+                  (previa.error ? (
+                    <p role="alert">{previa.error}</p>
+                  ) : previa.detalle ? (
+                    <VistaPreviaActividad actividad={previa.detalle} />
+                  ) : (
+                    <p role="status">Cargando vista previa...</p>
+                  ))}
               </li>
             );
           })}

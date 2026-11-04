@@ -8,20 +8,17 @@ export async function crearSalon({ name, type }) {
   return response.data;
 }
 
-// GET /classrooms/me -> salones del profesor logueado (grupos e individuales mezclados).
-// Misma ruta que usa la app móvil (mobile/lib/salones/salones_service.dart).
+// GET /classrooms/mine -> salones del profesor logueado (grupos e individuales mezclados).
 // Respuesta: array de { id, name, type: "GRUPO" | "INDIVIDUAL", joinCode, ... }.
 // Los individuales se filtran en el cliente (ver Tutorias.jsx).
-// Pendiente en backend: hoy no existe esta ruta en backend/src/classrooms, así que
-// responde 404 hasta que se implemente.
 export async function obtenerMisSalones() {
   const response = await apiClient.get("/classrooms/mine");
   return response.data;
 }
 
-// GET /classrooms/:id/members -> usuarios unidos al salón
-// (pendiente en backend, ver nota de T2101)
+// GET /classrooms/:id/members -> alumnos unidos al salón (solo el profesor dueño).
+// Respuesta: array de { joinedAt, student: { id, email, role, createdAt } }.
 export async function obtenerMiembros(classroomId) {
-  const response = await apiClient.get(`/classrooms/${classroomId}/join`);
+  const response = await apiClient.get(`/classrooms/${classroomId}/members`);
   return response.data;
 }

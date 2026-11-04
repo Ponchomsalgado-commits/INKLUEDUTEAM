@@ -2,9 +2,10 @@ import apiClient from "./apiClient";
 
 // llamadas al backend para el material didáctico (lectura, video o audio) de una actividad
 
-// POST /media/upload -> sube un archivo a MinIO a través del backend y devuelve su referencia.
-// El backend valida tipo y tamaño de nuevo y entrega una URL firmada (nunca pública sin control).
-// Pendiente en backend: hoy no existe esta ruta, así que responde 404 hasta que se implemente.
+// POST /media/upload -> sube un archivo a MinIO a través del backend.
+// Devuelve { key, name, contentType, url, expiresIn, size }:
+//  - key: lo que se guarda en la actividad (mediaUrls). Es estable.
+//  - url: URL firmada que caduca; solo para mostrarlo ahora, nunca para guardarlo.
 export async function subirMaterial(archivo, onProgreso) {
   const datos = new FormData();
   datos.append("file", archivo);
@@ -15,5 +16,5 @@ export async function subirMaterial(archivo, onProgreso) {
       if (e.total) onProgreso?.(Math.round((e.loaded / e.total) * 100));
     },
   });
-  return { url: response.data.url ?? response.data.key };
+  return response.data;
 }

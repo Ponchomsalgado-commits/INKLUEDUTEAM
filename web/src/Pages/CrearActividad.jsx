@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import TemplateEditor from "../components/TemplateEditor";
 import SubirMaterial from "../components/SubirMaterial";
-import { materialDesdeUrl } from "../components/materialUtils";
-import { preguntaVacia } from "../components/preguntaVacia";
+import { materialDesdeReferencia } from "../components/materialUtils";
+import { opcionesIniciales, preguntaVacia } from "../components/preguntaVacia";
 import {
   obtenerPlantillas,
   obtenerActividad,
@@ -17,13 +17,9 @@ import { mensajeDeError } from "../components/errorHandler";
 // al guardar, publicarla en el salón recién creado..
 // Con ?actividad=ID (desde "Mis actividades") edita esa actividad propia en vez de crear otra.
 
-// Plantilla de origen de una actividad: por id y, si el catálogo cambió, por type + skin
+// Plantilla de origen de una actividad: el catálogo trae el schemaJson que necesita el editor
 function plantillaDeActividad(plantillas, actividad) {
-  const { type, skin } = actividad.content_json ?? {};
-  return (
-    plantillas.find((p) => String(p.id) === String(actividad.template_id)) ??
-    plantillas.find((p) => p.type === type && p.skin === skin)
-  );
+  return plantillas.find((p) => p.id === actividad.templateId);
 }
 
 export default function CrearActividad() {
@@ -56,18 +52,18 @@ export default function CrearActividad() {
         if (!origen) return;
         setPlantilla(origen);
         setTitulo(actividad.title);
-        setPreguntas(actividad.content_json?.preguntas ?? []);
-        setMateriales((actividad.media_urls ?? []).map(materialDesdeUrl));
+        setPreguntas(actividad.contentJson?.preguntas ?? []);
+        setMateriales((actividad.media ?? []).map(materialDesdeReferencia));
         return;
       }
 
-      const elegida = plantillas.find((p) => String(p.id) === plantillaId);
+      const elegida = plantillas.find((p) => p.id === plantillaId);
       if (!elegida) return;
       // Se edita una copia: el estado arranca vacío y la plantilla original no se toca
-      const schemaPreguntas = elegida.schema_json.fields.preguntas;
-      const totalOpciones = schemaPreguntas.items.opciones.minItems ?? 3;
+      const schemaPreguntas = elegida.schemaJson.fields.preguntas;
+      const totalOpciones = opcionesIniciales(schemaPreguntas.items.fields.opciones);
       setPlantilla(elegida);
-      setTitulo(elegida.display_name);
+      setTitulo(elegida.displayName);
       setPreguntas(
         Array.from({ length: schemaPreguntas.minItems ?? 1 }, (_, i) =>
           preguntaVacia(`q${i + 1}`, totalOpciones),
@@ -100,10 +96,11 @@ export default function CrearActividad() {
       return;
     }
 
+    // Solo las preguntas: type y skin los define la plantilla y el backend los rechaza en el contenido
     const datos = {
       title: titulo.trim(),
-      content: { type: plantilla.type, skin: plantilla.skin, preguntas },
-      mediaUrls: materiales.map((m) => m.url),
+      content: { preguntas },
+      mediaUrls: materiales.map((m) => m.key),
     };
 
     setGuardando(true);
@@ -168,7 +165,7 @@ export default function CrearActividad() {
 
       <form className="crear-actividad" onSubmit={handleGuardar}>
         <h2>
-          {esEdicion ? "Editar actividad" : "Nueva actividad"}: {plantilla.display_name}
+          {esEdicion ? "Editar actividad" : "Nueva actividad"}: {plantilla.displayName}
         </h2>
         <p className="catalogo-subtitulo">
           {esEdicion
@@ -190,7 +187,7 @@ export default function CrearActividad() {
         </div>
 
         <TemplateEditor
-          schemaPreguntas={plantilla.schema_json.fields.preguntas}
+          schemaPreguntas={plantilla.schemaJson.fields.preguntas}
           preguntas={preguntas}
           onChange={setPreguntas}
         />

@@ -1,22 +1,24 @@
 import { useRef, useState } from "react";
 import { subirMaterial } from "../services/mediaService";
 import { mensajeDeError } from "./errorHandler";
-import { ICONOS_MATERIAL, formatearTamano, tipoDeMaterial } from "./materialUtils";
+import {
+  FORMATOS_PERMITIDOS,
+  ICONOS_MATERIAL,
+  formatearTamano,
+  formatoPermitido,
+  tipoDeMaterial,
+} from "./materialUtils";
 
 // Zona de arrastrar y soltar para el material didáctico de una actividad.
-// Cada archivo se sube en cuanto se suelta; la actividad solo guarda las URLs de los que quedaron listos.
-// materiales: [{ id, nombre, tamano, tipo, estado: "subiendo" | "listo" | "error", progreso, url, error, archivo }]
+// Cada archivo se sube en cuanto se suelta; la actividad solo guarda las claves (key) de los que quedaron listos.
+// materiales: [{ id, nombre, tamano, tipo, estado: "subiendo" | "listo" | "error", progreso, key, url, error, archivo }]
 // onChange recibe una función (lista) => nuevaLista, porque varias subidas terminan a la vez.
 
-// Lectura (PDF o texto), video o audio; el backend vuelve a validar tipo y tamaño antes de aceptarlo
-const TIPOS_PERMITIDOS = ["application/pdf", "text/plain", "video/", "audio/"];
-const ACCEPT = "application/pdf,text/plain,video/*,audio/*";
+// Formatos: los mismos que el backend (FORMATOS_PERMITIDOS). El backend vuelve a validar tipo y tamaño.
+const ACCEPT = FORMATOS_PERMITIDOS.map((f) => `.${f}`).join(",");
+const FORMATOS_TEXTO = FORMATOS_PERMITIDOS.map((f) => f.toUpperCase()).join(", ");
 const TAMANO_MAXIMO_MB = 50;
 const MAXIMO_ARCHIVOS = 5;
-
-function tipoPermitido(archivo) {
-  return TIPOS_PERMITIDOS.some((t) => (t.endsWith("/") ? archivo.type.startsWith(t) : archivo.type === t));
-}
 
 export default function SubirMaterial({ materiales, onChange }) {
   const inputRef = useRef(null);
@@ -29,8 +31,8 @@ export default function SubirMaterial({ materiales, onChange }) {
   const subir = async (material) => {
     actualizar(material.id, { estado: "subiendo", progreso: 0, error: "" });
     try {
-      const { url } = await subirMaterial(material.archivo, (progreso) => actualizar(material.id, { progreso }));
-      actualizar(material.id, { estado: "listo", url });
+      const { key, url } = await subirMaterial(material.archivo, (progreso) => actualizar(material.id, { progreso }));
+      actualizar(material.id, { estado: "listo", key, url });
     } catch (err) {
       actualizar(material.id, { estado: "error", error: mensajeDeError(err, "No se pudo subir el archivo") });
     }
@@ -42,8 +44,8 @@ export default function SubirMaterial({ materiales, onChange }) {
     let espacio = MAXIMO_ARCHIVOS - materiales.length;
 
     for (const archivo of archivos) {
-      if (!tipoPermitido(archivo)) {
-        rechazos.push(`"${archivo.name}" no es lectura (PDF/TXT), video ni audio.`);
+      if (!formatoPermitido(archivo.name)) {
+        rechazos.push(`"${archivo.name}" no es un formato permitido (${FORMATOS_TEXTO}).`);
       } else if (archivo.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
         rechazos.push(`"${archivo.name}" pesa más de ${TAMANO_MAXIMO_MB} MB.`);
       } else if (espacio <= 0) {
@@ -54,7 +56,7 @@ export default function SubirMaterial({ materiales, onChange }) {
           id: `${Date.now()}-${nuevos.length}-${archivo.name}`,
           nombre: archivo.name,
           tamano: archivo.size,
-          tipo: tipoDeMaterial(archivo.type),
+          tipo: tipoDeMaterial(archivo.name),
           estado: "subiendo",
           progreso: 0,
           archivo,
@@ -111,7 +113,7 @@ export default function SubirMaterial({ materiales, onChange }) {
         </span>
         <strong>{arrastrando ? "Suelta los archivos aquí" : "Arrastra tus archivos aquí"}</strong>
         <span>
-          o haz clic para elegirlos · PDF, TXT, video o audio · hasta {TAMANO_MAXIMO_MB} MB cada uno
+          o haz clic para elegirlos · {FORMATOS_TEXTO} · hasta {TAMANO_MAXIMO_MB} MB cada uno
         </span>
         <input
           ref={inputRef}
