@@ -15,7 +15,7 @@
 .hero {
   position: relative;
   z-index: 2;
-  padding: 44px 20px 72px;
+  padding: 84px 20px 72px;
   background: linear-gradient(110deg, var(--azul-1) 0%, var(--azul-2) 55%, var(--azul-3) 100%);
   color: #fff;
   text-align: center;
@@ -82,6 +82,35 @@
 }
 
 /* ===== Navegación ===== */
+/* cerrar sesión a la izquierda, pestañas a la derecha */
+.barra-superior {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  left: 24px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn-cerrar-sesion {
+  display: inline-block;
+  padding: 8px 18px;
+  border: 2px solid rgb(255 255 255 / 85%);
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-cerrar-sesion:hover {
+  background: #fff;
+  color: var(--azul-1);
+}
+
 .nav-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -308,7 +337,7 @@ select:focus-visible {
 
 @media (max-width: 480px) {
   .hero {
-    padding: 32px 16px 60px;
+    padding: 64px 16px 60px;
   }
 
   .tarjeta {
@@ -320,60 +349,71 @@ select:focus-visible {
     padding: 8px 12px;
     font-size: 14px;
   }
+
+  .barra-superior {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .btn-cerrar-sesion {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
 }
 
 /* ===== T2101: Mis salones ===== */
-.salones-container {
-  width: 100%;
-  max-width: 640px;
-  margin-top: 20px;
-  padding: 35px;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+.tarjeta.salones-container {
+  max-width: 680px;
 }
 
 .salones-container h2 {
-  margin: 0 0 20px;
-  color: #1e3a8a;
-  font-size: 22px;
-  text-align: center;
+  margin: 0 0 24px;
 }
 
 .salones-container h3 {
-  margin: 0 0 12px;
-  color: #1e3a8a;
-  font-size: 18px;
+  margin: 0 0 14px;
+  color: var(--azul-oscuro);
+  font-family: var(--fuente-titulo);
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .crear-salon {
   margin-bottom: 28px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--borde);
 }
 
 .form-group select {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  padding: 14px 20px;
+  border: 2px solid var(--borde);
+  border-radius: 999px;
+  outline: none;
   background: #f8fafc;
   font: inherit;
   font-size: 14px;
 }
 
+.form-group select:focus {
+  border-color: var(--azul-3);
+  box-shadow: 0 0 0 4px rgb(79 179 214 / 22%);
+}
+
 .salones-container button {
   border: 0;
-  border-radius: 8px;
-  background: #23a4dc;
+  border-radius: 999px;
+  background: linear-gradient(110deg, var(--azul-1) 0%, var(--azul-3) 100%);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: transform 0.15s, filter 0.2s;
 }
 
 .salones-container button:hover:not(:disabled) {
-  background: #172554;
+  transform: translateY(-1px);
+  filter: brightness(1.08);
 }
 
 .salones-container button:disabled {
@@ -384,8 +424,9 @@ select:focus-visible {
 .crear-salon button[type='submit'] {
   width: 100%;
   margin-top: 10px;
-  padding: 12px;
-  font-size: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgb(47 111 174 / 24%);
+  font-size: 18px;
 }
 
 .salones-container [role='status'],
@@ -522,4 +563,489 @@ select:focus-visible {
 .perfil-alumno dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+/* ===== Mis salones en formato ancho ===== */
+.tarjeta.salones-ancho {
+  max-width: 1250px;
+}
+
+.salones-ancho h2 {
+  text-align: left;
+}
+
+.seccion-salones {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--borde);
+}
+
+/* tarjetas de salón en cuadrícula que ocupa todo el ancho */
+.salones-ancho .lista-salones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.salones-ancho .salon-card {
+  margin-top: 0;
+}
+
+.sin-datos {
+  margin: 8px 0 0;
+  padding: 18px;
+  border: 2px dashed var(--borde);
+  border-radius: 16px;
+  color: var(--texto-suave);
+  font-weight: 700;
+  text-align: center;
+}
+
+.miembros .sin-datos {
+  padding: 10px;
+}
+
+/* formulario de crear salón en una sola fila */
+.crear-salon-horizontal {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.crear-salon-campos {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.crear-salon-campos .form-group {
+  margin-bottom: 0;
+}
+
+.crear-salon-horizontal button[type='submit'] {
+  width: auto;
+  margin-top: 0;
+  padding: 13px 32px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .crear-salon-campos {
+    grid-template-columns: 1fr;
+  }
+
+  .crear-salon-horizontal button[type='submit'] {
+    width: 100%;
+  }
+}
+
+.crear-salon-campos.campos-dos {
+  grid-template-columns: 1fr auto;
+}
+
+.salones-ancho .codigo-nuevo {
+  margin: 20px 0 0;
+}
+
+/* ===== Crear salón ===== */
+.encabezado-seccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.encabezado-seccion h2 {
+  margin: 0;
+}
+
+.btn-crear {
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: linear-gradient(110deg, var(--azul-1) 0%, var(--azul-3) 100%);
+  box-shadow: 0 8px 20px rgb(47 111 174 / 24%);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.15s, filter 0.2s;
+}
+
+.btn-crear:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.enlace-volver {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--azul-1);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.enlace-volver:hover {
+  text-decoration: underline;
+}
+
+.salones-ancho form.seccion-salones {
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--borde);
+}
+
+/* catálogo de plantillas */
+.catalogo-subtitulo {
+  margin: -6px 0 16px;
+  color: var(--texto-suave);
+}
+
+.catalogo-plantillas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plantilla-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 16px 18px;
+  border: 2px solid var(--borde);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff 0%, #f0f8fc 100%);
+  text-align: center;
+  transition: transform 0.15s, border-color 0.2s;
+}
+
+.plantilla-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--azul-3);
+}
+
+.plantilla-icono {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e6f4fb;
+  font-size: 32px;
+}
+
+.plantilla-card strong {
+  color: var(--azul-oscuro);
+  font-family: var(--fuente-titulo);
+  font-size: 18px;
+}
+
+.plantilla-card p {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 14px;
+}
+
+.plantilla-estado {
+  margin-top: 6px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--fondo-3);
+  color: var(--azul-oscuro);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.plantilla-campos {
+  width: 100%;
+  margin: 6px 0 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--texto-suave);
+  font-size: 13px;
+  list-style: none;
+  text-align: left;
+}
+
+.plantilla-campos li + li {
+  margin-top: 4px;
+}
+
+.plantilla-campos li::before {
+  content: '• ';
+  color: var(--azul-3);
+}
+
+.plantilla-usar {
+  margin-top: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: linear-gradient(110deg, var(--azul-1) 0%, var(--azul-3) 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.plantilla-usar:hover {
+  filter: brightness(1.08);
+}
+
+/* editor de actividad (TemplateEditor) */
+.editor-contador {
+  margin: 0 0 10px;
+  color: var(--texto-suave);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.editor-preguntas {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.editor-pregunta {
+  margin-bottom: 16px;
+  padding: 18px 20px 4px;
+  border: 2px solid var(--borde);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff 0%, #f0f8fc 100%);
+}
+
+.editor-pregunta-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.editor-pregunta-encabezado h4 {
+  margin: 0;
+  color: var(--azul-oscuro);
+}
+
+.editor-opciones {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.editor-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-opcion + .editor-opcion {
+  margin-top: 8px;
+}
+
+.form-group .editor-opcion input[type='radio'] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--azul-2);
+}
+
+.template-editor > button {
+  padding: 10px 20px;
+}
+
+.salones-container button.btn-secundario {
+  padding: 6px 14px;
+  border: 2px solid var(--borde);
+  background: #fff;
+  color: var(--azul-oscuro);
+  font-size: 13px;
+}
+
+.btn-guardar-actividad {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+/* subida de material didáctico (drag & drop) */
+.subir-material-titulo {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.zona-material {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 26px 16px;
+  border: 2px dashed var(--azul-3);
+  border-radius: 20px;
+  background: #f0f9ff;
+  color: var(--texto-suave);
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.zona-material strong {
+  color: var(--azul-oscuro);
+  font-size: 16px;
+}
+
+.zona-material:hover,
+.zona-material:focus-visible,
+.zona-material.arrastrando {
+  border-color: var(--azul-1);
+  background: #e0f2fe;
+  outline: none;
+}
+
+.zona-material-icono {
+  font-size: 32px;
+}
+
+.material-avisos {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.lista-material {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.material-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.material-item + .material-item {
+  margin-top: 8px;
+}
+
+.material-error {
+  border-color: #fca5a5;
+}
+
+.material-icono {
+  font-size: 22px;
+}
+
+.material-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.material-info strong {
+  overflow: hidden;
+  color: var(--azul-oscuro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.material-info small {
+  color: var(--texto-suave);
+}
+
+.material-error .material-info small {
+  color: #b91c1c;
+}
+
+.material-info progress {
+  width: 100%;
+  height: 6px;
+  margin-top: 4px;
+  accent-color: var(--azul-2);
+}
+
+/* mis actividades */
+.actividad-detalle {
+  margin: 10px 0;
+  color: var(--texto-suave);
+  font-size: 14px;
+}
+
+.actividad-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.actividad-acciones .plantilla-usar {
+  margin-top: 0;
+  padding: 7px 16px;
+  font-size: 14px;
+}
+
+.vista-previa {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.vista-previa h4 {
+  margin: 8px 0 6px;
+  color: var(--azul-oscuro);
+}
+
+.vista-previa-material {
+  margin: 0;
+  padding-left: 4px;
+  list-style: none;
+}
+
+.vista-previa-material a {
+  color: var(--azul-1);
+  overflow-wrap: anywhere;
+}
+
+.vista-previa-preguntas {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.vista-previa-preguntas > li + li {
+  margin-top: 10px;
+}
+
+.vista-previa-preguntas p {
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.vista-previa-opciones {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.opcion-correcta {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.opcion-correcta-marca {
+  font-size: 12px;
 }

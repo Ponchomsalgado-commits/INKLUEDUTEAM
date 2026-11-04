@@ -1,12 +1,12 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { ClassroomType } from '@prisma/client';
+import { ClassroomType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClassroomsService, CODE_CHARSET, CODE_LENGTH } from './classrooms.service';
 
 describe('ClassroomsService', () => {
   const prisma = {
-    classroom: { findUnique: jest.fn(), create: jest.fn() },
-    classroomMember: { findUnique: jest.fn(), create: jest.fn() },
+    classroom: { findUnique: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn() },
+    classroomMember: { findUnique: jest.fn(), findMany: jest.fn(), create: jest.fn() },
   };
   const service = new ClassroomsService(prisma as unknown as PrismaService);
 
@@ -60,5 +60,48 @@ describe('ClassroomsService', () => {
     await expect(service.join('alumno-1', { joinCode: 'ABC234' })).rejects.toThrow(
       ConflictException,
     );
+  });
+
+  it('lista al profesor los salones que creó', async () => {
+    prisma.classroom.findMany.mockResolvedValue([{ id: 'salon-1' }]);
+
+    const r = await service.listMine('profe-1', Role.PROFESOR);
+
+    expect(prisma.classroom.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { teacherId: 'profe-1' } }),
+    );
+    expect(r).toEqual([{ id: 'salon-1' }]);
+  });
+
+  it('lista al estudiante los salones a los que se unió', async () => {
+    prisma.classroomMember.findMany.mockResolvedValue([
+      { classroom: { id: 'salon-1' } },
+      { classroom: { id: 'tutoria-1' } },
+    ]);
+
+    const r = await service.listMine('alumno-1', Role.ESTUDIANTE);
+
+    expect(prisma.classroomMember.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { studentId: 'alumno-1' } }),
+    );
+    expect(r).toEqual([{ id: 'salon-1' }, { id: 'tutoria-1' }]);
+  });
+
+  it('muestra los miembros solo al profesor dueño del salón', async () => {
+    prisma.classroom.findFirst.mockResolvedValue({ id: 'salon-1' });
+    prisma.classroomMember.findMany.mockResolvedValue([]);
+
+    await service.listMembers('profe-1', 'salon-1');
+
+    expect(prisma.classroom.findFirst).toHaveBeenCalledWith({
+      where: { id: 'salon-1', teacherId: 'profe-1' },
+    });
+  });
+
+  it('responde 404 a un profesor que no es dueño del salón', async () => {
+    prisma.classroom.findFirst.mockResolvedValue(null);
+
+    await expect(service.listMembers('otro-profe', 'salon-1')).rejects.toThrow(NotFoundException);
+    expect(prisma.classroomMember.findMany).not.toHaveBeenCalled();
   });
 });

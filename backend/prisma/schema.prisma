@@ -21,6 +21,7 @@ model User {
 
   classroomsTaught     Classroom[]       @relation("TeacherClassrooms")
   classroomMemberships ClassroomMember[] @relation("StudentMemberships")
+  activities           TeacherActivity[]  @relation("TeacherActivities")
 
   @@map("users")
 }
@@ -53,4 +54,37 @@ model ClassroomMember {
 
   @@id([classroomId, studentId])
   @@map("classroom_members")
+}
+
+model GameTemplate {
+  id          String @id @default(uuid())
+  type        String @db.VarChar(40)
+  skin        String @db.VarChar(40)
+  displayName String @map("display_name") @db.VarChar(80)
+  schemaJson  Json   @map("schema_json")
+
+  activities TeacherActivity[]
+
+  @@unique([type, skin])
+  @@map("game_templates")
+}
+
+model TeacherActivity {
+  id             String       @id @default(uuid())
+  teacherId      String       @map("teacher_id")
+  teacher        User         @relation("TeacherActivities", fields: [teacherId], references: [id])
+  templateId     String       @map("template_id")
+  template       GameTemplate @relation(fields: [templateId], references: [id])
+  title          String       @db.VarChar(150)
+  contentJson    Json         @map("content_json")
+  // Claves de objeto en MinIO (no URLs públicas); se firman al responder
+  mediaUrls      String[]     @default([]) @map("media_urls")
+  // Sube cada vez que cambia el contenido o el material (mitigación offline, doc. sección 1.11)
+  contentVersion Int          @default(1) @map("content_version")
+  publishedAt    DateTime?    @map("published_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([teacherId])
+  @@map("teacher_activities")
 }

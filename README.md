@@ -10,22 +10,26 @@ Monorepo con tres aplicaciones que comparten un solo backend:
 
 El documento técnico completo (cómo funciona, por qué se decidió cada cosa y el plan de sprints) está en [`docs/`](docs/README.md).
 
-## Estado actual: Sprint 1 cerrado
+## Estado actual: Sprint 3 cerrado (web y backend)
 
 | Sprint | Alcance                                        | Estado                                                     |
 | ------ | ---------------------------------------------- | ---------------------------------------------------------- |
 | 0      | Repo, Docker, health check                     | ✅ Hecho                                                   |
 | 1      | Registro, login, roles, refresh de tokens      | ✅ Hecho en backend, web y móvil                           |
-| 2      | Salones y códigos únicos                       | 🟡 Backend: crear salón y unirse. Pantallas en sus ramas   |
-| 3–9    | Plantillas, minijuegos, asignaciones, badges…  | ⏳ Pendiente (carpetas vacías en `backend/src` reservadas) |
+| 2      | Salones y códigos únicos                       | ✅ Backend y web. Móvil: pantallas de su rama              |
+| 3      | Plantillas, actividades y material (web)       | ✅ Backend y web. Móvil sin trabajo en este sprint         |
+| 4–9    | Minijuegos, asignaciones, badges…              | ⏳ Pendiente (carpetas `backend/src` reservadas)           |
 
 **Qué funciona hoy, de extremo a extremo:**
 
 - Un profesor se registra e inicia sesión en la **web**; la web rechaza cuentas de estudiante.
 - Un estudiante se registra e inicia sesión en la **app móvil**; la app rechaza cuentas de profesor y recuerda la sesión al reabrirla.
 - En los dos clientes, cuando el access token caduca se renueva solo con el refresh token, sin pedir login.
-- La API protege rutas por token y por rol (`401` sin token, `403` con el rol equivocado).
-- Un profesor crea un salón (`GRUPO`, código de 6 caracteres) o tutoría (`INDIVIDUAL`, 5 caracteres) y un estudiante se une con el código.
+- La API protege rutas por token y por rol (`401` sin token, `403` con el rol equivocado) y responde errores con un único formato `{ statusCode, error, message, field? }`.
+- Un profesor crea un salón (`GRUPO`, código de 6 caracteres) o tutoría (`INDIVIDUAL`, 5 caracteres), ve sus salones y sus miembros, y un estudiante se une con el código.
+- Un profesor elige una plantilla del catálogo, edita su copia (preguntas y opciones con una correcta por pregunta), sube material (PDF, TXT, video o audio) y la guarda en **Mis actividades**, donde puede editarla o previsualizarla. La plantilla original nunca se modifica.
+
+**Lo que aún no funciona en la web:** el botón "Guardar y publicar" en un salón. Publicar (`POST /assignments`) es del Sprint 5; hasta entonces la actividad se guarda, pero la publicación muestra "Esta función aún no está disponible en el servidor".
 
 ## Estructura
 
@@ -36,15 +40,20 @@ El documento técnico completo (cómo funciona, por qué se decidió cada cosa y
 │   ├── src/
 │   │   ├── auth/            # registro, login, refresh, guards de JWT y de rol
 │   │   ├── users/           # acceso a la tabla users
-│   │   ├── classrooms/      # salones/tutorías y códigos de acceso
+│   │   ├── classrooms/      # salones/tutorías, códigos de acceso y miembros
+│   │   ├── templates/       # catálogo de plantillas (templates.catalog.ts) sincronizado al arrancar
+│   │   ├── activities/      # actividades propias y validación de su contenido contra el schema
+│   │   ├── media/           # subida de material a MinIO y URLs firmadas
+│   │   ├── common/errors/   # formato único de errores
 │   │   ├── prisma/          # PrismaService (conexión a la base)
-│   │   └── templates/ activities/ assignments/ progress/ badges/   # reservadas, sprints 3–6
+│   │   └── assignments/ progress/ badges/   # reservadas, sprints 5–6
 │   └── Dockerfile           # etapas: development (hot reload) y production
 ├── web/
 │   ├── src/
 │   │   ├── auth/            # authService (login/registro) y tokenStore (dónde viven los tokens)
-│   │   ├── services/        # apiClient: axios + renovación automática del token
-│   │   └── Pages/           # Login, Register
+│   │   ├── services/        # apiClient (axios + renovación del token), activityService, mediaService, classroomService
+│   │   ├── components/      # editor de plantillas, subida de material, vista previa
+│   │   └── Pages/           # Login, Register, Mis salones, Tutorías, Crear actividad, Mis actividades
 │   ├── Dockerfile           # build de producción servido por Nginx
 │   └── nginx.conf           # sirve la web y reenvía /api al backend
 ├── mobile/
@@ -109,13 +118,27 @@ Con celular físico: misma red Wi-Fi que la PC y el puerto 3000 permitido en el 
 
 | Qué                          | Comando                                   |
 | ---------------------------- | ----------------------------------------- |
-| Unitarias del backend        | `cd backend && npm test`                  |
-| Prueba de humo de la API     | `./scripts/smoke-test.sh` (con la API en marcha; en Windows usa Git Bash) |
+| Unitarias del backend (50 pruebas, 7 suites) | `cd backend && npm test`                  |
+| Solo una suite (ej. actividades) | `cd backend && npm test -- activities`    |
+| Chequeo de tipos del backend | `cd backend && npx tsc --noEmit`          |
+| Prueba de humo de la API     | `bash scripts/smoke-test.sh` (con la API en marcha; ver abajo) |
 | Lint y build de la web       | `cd web && npm run lint && npm run build` |
 | Análisis estático del móvil  | `cd mobile && flutter analyze`            |
 | Manual (Bruno)               | Abre `docs/bruno-collection` en [Bruno](https://www.usebruno.com/) |
 
 Antes de abrir un Pull Request, corre al menos las unitarias y la prueba de humo.
+
+**Prueba de humo (Sprints 1–3).** Requiere `docker compose up --build` (API, PostgreSQL y MinIO). Usa Git Bash en Windows.
+
+```bash
+bash scripts/smoke-test.sh                      # contra http://localhost:3000
+bash scripts/smoke-test.sh http://mi-servidor   # contra un servidor
+```
+
+- Usa `bash scripts/...`, no `./scripts/...`: el archivo no tiene permiso de ejecución en git.
+- Crea usuarios y datos con correos `smoke-*@test.local`; cada corrida usa datos nuevos, así que se puede repetir sin limpiar la base.
+- La sección de material necesita que MinIO esté arriba. Si MinIO no responde, esas pruebas fallan y el resto sigue.
+- Termina con `Todo correcto.` o con el número de pruebas fallidas (código de salida 1).
 
 ## API actual
 
@@ -130,8 +153,26 @@ Base: `/api/v1`. Las rutas con 🔒 requieren `Authorization: Bearer <access_tok
 | GET    | `/auth/perfil`        | 🔒 cualquiera   | Contenido del token: `{ sub, email, role }`                  |
 | POST   | `/classrooms`         | 🔒 PROFESOR     | `{ name, type: "GRUPO" \| "INDIVIDUAL" }` → salón con `joinCode` |
 | POST   | `/classrooms/join`    | 🔒 ESTUDIANTE   | `{ joinCode }` → inscripción                                 |
+| GET    | `/classrooms/mine`    | 🔒 cualquiera   | Profesor: sus salones. Estudiante: a los que se unió         |
+| GET    | `/classrooms/:id/members` | 🔒 PROFESOR dueño | Alumnos unidos: `[{ joinedAt, student: { id, email, role, createdAt } }]` |
+| GET    | `/templates`          | 🔒 PROFESOR     | Catálogo de plantillas: `[{ id, type, skin, displayName, schemaJson }]` |
+| GET    | `/templates/:id`      | 🔒 PROFESOR     | Una plantilla con su `schemaJson`                            |
+| POST   | `/activities`         | 🔒 PROFESOR     | `{ templateId, title, contentJson, mediaUrls? }` → copia propia |
+| GET    | `/activities`         | 🔒 PROFESOR     | Mis actividades (resumen, sin preguntas)                     |
+| GET    | `/activities/:id`     | 🔒 PROFESOR dueño | Detalle con `contentJson` y `media` (URLs firmadas)        |
+| PATCH  | `/activities/:id`     | 🔒 PROFESOR dueño | Edita `title`, `contentJson` y/o `mediaUrls`; sube `contentVersion` si cambia el contenido |
+| POST   | `/media/upload`      | 🔒 PROFESOR     | Multipart con el campo `file` → `{ key, name, url, size, … }` |
+| GET    | `/media/url?key=`     | 🔒 PROFESOR dueño | URL firmada nueva de un archivo propio                     |
 
 Reglas: `role` es `PROFESOR` o `ESTUDIANTE`; la contraseña lleva mínimo 8 caracteres; los códigos de salón no usan caracteres ambiguos (0/O, 1/I/L) y no distinguen mayúsculas.
+
+Reglas de actividades y material:
+
+- El cuerpo de la API usa **camelCase** (`templateId`, `contentJson`, `mediaUrls`). Un campo que no existe en el DTO responde `400`.
+- El `contentJson` solo lleva `preguntas`; `type` y `skin` los pone la plantilla. Cada pregunta necesita exactamente una opción `correcta`.
+- En `mediaUrls` se envía la **`key`** que devuelve `/media/upload`, nunca la `url` firmada (esa caduca).
+- Tipos de archivo permitidos: pdf, txt, png, jpg, webp, mp4, webm, mp3, m4a, ogg, wav. Tamaño máximo por defecto: 50 MB (`MEDIA_MAX_MB`).
+- Las URLs firmadas usan `MINIO_PUBLIC_URL`. Si el navegador no abre el material, revisa que apunte a un host que el navegador pueda alcanzar (por ejemplo `http://localhost:9000`).
 
 > Nota: el documento técnico usa `/auth/register` y `/auth/refresh`; la API implementada usa `/auth/registro` y `/auth/refrescar`. La tabla de arriba es la fuente de verdad.
 
@@ -139,9 +180,9 @@ Reglas: `role` es `PROFESOR` o `ESTUDIANTE`; la contraseña lleva mínimo 8 cara
 
 - **Registro de profesores abierto:** la API acepta `role: "PROFESOR"` de cualquier cliente. Falta decidir cómo se dan de alta los profesores (código de invitación, alta por administrador…).
 - **Sesión web al recargar:** el access token vive en memoria y se pierde al recargar; falta usar el refresh token guardado para restaurar la sesión, y redirigir después del login.
-- **Endpoints de listado de salones:** `GET /classrooms` (profesor) y `GET /classrooms/mine` (estudiante). Acordar la forma de la respuesta antes de hacer las pantallas.
+- **Publicar actividades (`POST /assignments`):** es del Sprint 5. Hasta entonces, "Guardar y publicar" en la web guarda la actividad pero no la publica.
 - **Tutoría individual:** todavía no se limita a un solo estudiante (regla del Sprint 7).
-- **Formato único de errores** (documento técnico, sección 3.12): aún no implementado.
+- **Plantillas del móvil:** la app todavía no renderiza `seleccionar_objetivo` ni lee `contentJson`; eso es del Sprint 4.
 - **HTTPS:** al tenerlo, quitar `usesCleartextTraffic` del AndroidManifest y `NSAllowsLocalNetworking` de iOS.
 
 ## Trabajo en equipo
