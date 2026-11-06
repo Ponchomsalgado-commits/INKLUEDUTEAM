@@ -4,6 +4,8 @@ import '../auth/auth_service.dart';
 import '../auth/login_screen.dart';
 import '../core/token_storage.dart';
 import '../salones/mis_salones_screen.dart';
+import '../reproductor/reproductor_screen.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -45,6 +47,14 @@ class HomeScreen extends StatelessWidget {
     MaterialPageRoute(builder: (_) => const MisSalonesScreen()),
   ),
   child: const Text('Mis salones'),
+),
+const SizedBox(height: 24),
+ElevatedButton(
+onPressed: () => Navigator.push(
+  context,
+MaterialPageRoute(builder: (_) =>const ReproductorScreen()),
+),
+child: const Text('Reproductor de material'),
 ),
      ],
         ),
