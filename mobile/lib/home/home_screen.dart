@@ -5,6 +5,7 @@ import '../auth/login_screen.dart';
 import '../core/token_storage.dart';
 import '../salones/mis_salones_screen.dart';
 import '../reproductor/reproductor_screen.dart';
+import '../minijuego/minijuego_screen.dart';
 
 
 class HomeScreen extends StatelessWidget {
@@ -48,13 +49,21 @@ class HomeScreen extends StatelessWidget {
   ),
   child: const Text('Mis salones'),
 ),
-const SizedBox(height: 24),
+const SizedBox(height: 12),
 ElevatedButton(
 onPressed: () => Navigator.push(
   context,
 MaterialPageRoute(builder: (_) =>const ReproductorScreen()),
 ),
 child: const Text('Reproductor de material'),
+),
+const SizedBox(height: 12),
+ElevatedButton(
+onPressed: () => Navigator.push(
+  context,
+MaterialPageRoute(builder: (_) =>const MinijuegoScreen()),
+),
+child: const Text('Minijuego'),
 ),
      ],
         ),
