@@ -1006,22 +1006,6 @@ select:focus-visible {
   font-size: 14px;
 }
 
-.vista-previa h4 {
-  margin: 8px 0 6px;
-  color: var(--azul-oscuro);
-}
-
-.vista-previa-material {
-  margin: 0;
-  padding-left: 4px;
-  list-style: none;
-}
-
-.vista-previa-material a {
-  color: var(--azul-1);
-  overflow-wrap: anywhere;
-}
-
 .vista-previa-preguntas {
   margin: 0;
   padding-left: 20px;
@@ -1039,13 +1023,4 @@ select:focus-visible {
 .vista-previa-opciones {
   margin: 0;
   padding-left: 16px;
-}
-
-.opcion-correcta {
-  color: #15803d;
-  font-weight: 700;
-}
-
-.opcion-correcta-marca {
-  font-size: 12px;
 }

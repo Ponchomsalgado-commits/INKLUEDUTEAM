@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { crearSalon } from "../services/classroomService";
 import { obtenerPlantillas } from "../services/activityService";
-import { mensajeDeError } from "../components/errorHandler";
-import { ICONOS_SKIN } from "../components/iconosSkin";
+import { mensajeDeError } from "../components/shared/errorHandler";
+import { ICONOS_SKIN } from "../components/shared/iconosSkin";
 
 // Pantalla exclusiva para crear un salón y, debajo, el catálogo de plantillas.
 

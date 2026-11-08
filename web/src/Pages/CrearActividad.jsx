@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import TemplateEditor from "../components/TemplateEditor";
 import SubirMaterial from "../components/SubirMaterial";
-import { materialDesdeReferencia } from "../components/materialUtils";
-import { opcionesIniciales, preguntaVacia } from "../components/preguntaVacia";
+import { materialDesdeReferencia } from "../components/shared/materialUtils";
+import { opcionesIniciales, preguntaVacia } from "../components/shared/preguntaVacia";
 import {
   obtenerPlantillas,
   obtenerActividad,
@@ -10,8 +10,8 @@ import {
   editarActividad,
   publicarActividad,
 } from "../services/activityService";
-import { validarPreguntas } from "../components/validarPreguntas";
-import { mensajeDeError } from "../components/errorHandler";
+import { validarPreguntas } from "../components/shared/validarPreguntas";
+import { mensajeDeError } from "../components/shared/errorHandler";
 
 // Pantalla para editar una copia de la plantilla elegida en /salones/crear y,
 // al guardar, publicarla en el salón recién creado..
@@ -128,6 +128,8 @@ export default function CrearActividad() {
     }
   };
 
+  const idActividad = esEdicion ? actividadId : actividadCreada?.id;
+
   const enlaceVolver = esEdicion ? (
     <a href="/actividades" className="enlace-volver">
       ← Volver a Mis actividades
@@ -228,6 +230,11 @@ export default function CrearActividad() {
                 ? "Guardar y publicar"
                 : "Guardar actividad"}
         </button>
+        {idActividad && (
+          <a href={`/actividades/previa?actividad=${idActividad}`} className="plantilla-usar">
+            Previsualizar como alumno
+          </a>
+        )}
       </form>
     </div>
   );
