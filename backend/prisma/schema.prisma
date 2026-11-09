@@ -22,6 +22,7 @@ model User {
   classroomsTaught     Classroom[]       @relation("TeacherClassrooms")
   classroomMemberships ClassroomMember[] @relation("StudentMemberships")
   activities           TeacherActivity[]  @relation("TeacherActivities")
+  progress             Progress[]
 
   @@map("users")
 }
@@ -85,6 +86,39 @@ model TeacherActivity {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
+  progress Progress[]
+
   @@index([teacherId])
   @@map("teacher_activities")
+}
+
+model Progress {
+  id              String           @id @default(uuid())
+  studentId       String           @map("student_id")
+  student         User             @relation(fields: [studentId], references: [id])
+  activityId      String           @map("activity_id")
+  activity        TeacherActivity  @relation(fields: [activityId], references: [id])
+  score           Int
+  totalPreguntas  Int              @map("total_preguntas")
+  contentVersion  Int              @map("content_version")
+  clientAttemptId String?          @map("client_attempt_id")
+  submittedAt     DateTime         @default(now()) @map("submitted_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  answers         ProgressAnswer[]
+
+  @@unique([studentId, clientAttemptId])
+  @@index([activityId])
+  @@map("progress")
+}
+
+model ProgressAnswer {
+  id         String   @id @default(uuid())
+  progressId String   @map("progress_id")
+  progress   Progress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  preguntaId String   @map("pregunta_id")
+  opcionId   Int      @map("opcion_id")
+  correcta   Boolean
+
+  @@index([progressId])
+  @@map("progress_answers")
 }
