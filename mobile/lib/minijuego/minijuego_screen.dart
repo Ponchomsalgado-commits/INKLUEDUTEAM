@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'progreso_local.dart';
 
+import '../models/pregunta_data.dart';
+import '../widgets/minijuego_factory.dart';
+import 'progreso_local.dart';
 
 class Pregunta {
   final String enunciado;
   final List<String> opciones;
-  final int correcta; // índice de la opción correcta
+  final int correcta;
 
   const Pregunta({
     required this.enunciado,
@@ -13,7 +15,6 @@ class Pregunta {
     required this.correcta,
   });
 }
-
 
 const List<Pregunta> _preguntasDePrueba = [
   Pregunta(
@@ -34,16 +35,21 @@ const List<Pregunta> _preguntasDePrueba = [
 ];
 
 class MinijuegoScreen extends StatefulWidget {
-  /// Identifica el minijuego. El progreso se guarda con este id.
   final String id;
   final String titulo;
   final List<Pregunta> preguntas;
 
+  final String type;
+
+  final String? skin;
+
   const MinijuegoScreen({
     super.key,
-    this.id = 'prueba', // <- línea nueva
+    this.id = 'prueba',
     this.titulo = 'Minijuego',
     this.preguntas = _preguntasDePrueba,
+    this.type = 'seleccionar_objetivo',
+    this.skin,
   });
 
   @override
@@ -53,7 +59,7 @@ class MinijuegoScreen extends StatefulWidget {
 class _MinijuegoScreenState extends State<MinijuegoScreen> {
   int _actual = 0;
   bool _terminado = false;
-  bool _cargado = false; // false mientras se lee el progreso guardado
+  bool _cargado = false;
   late List<int?> _respuestas =
       List<int?>.filled(widget.preguntas.length, null);
 
@@ -169,26 +175,22 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
           borderRadius: BorderRadius.circular(4),
         ),
         const SizedBox(height: 24),
-        Text(
-          p.enunciado,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        for (var i = 0; i < p.opciones.length; i++)
-          Card(
-            color: seleccion == i
-                ? Theme.of(context).colorScheme.primaryContainer
-                : null,
-            child: ListTile(
-              leading: Icon(
-                seleccion == i
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(p.opciones[i], style: const TextStyle(fontSize: 18)),
-              onTap: () => _seleccionar(i),
+
+        SizedBox(
+          height: 380,
+          child: construirMinijuego(
+            type: widget.type,
+            skin: widget.skin,
+            pregunta: PreguntaData(
+              id: '$_actual', // provisional (aún no hay id real de backend)
+              texto: p.enunciado,
+              opciones: [for (final o in p.opciones) OpcionData(texto: o)],
             ),
+            seleccionInicial: seleccion,
+            onResponder: (_, opcionId) => _seleccionar(opcionId),
           ),
+        ),
+
         const SizedBox(height: 24),
         Row(
           children: [
