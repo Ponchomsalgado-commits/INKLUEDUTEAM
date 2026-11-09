@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../api_client.dart';
 import 'salon.dart';
+import 'salon_detalle_screen.dart';
 import 'salones_service.dart';
 import 'unirme_salon_screen.dart';
 
@@ -23,7 +24,9 @@ class _MisSalonesScreenState extends State<MisSalonesScreen> {
   }
 
   void _recargar() {
-    setState(() => _futuro = _service.misSalones());
+    setState(() {
+      _futuro = _service.misSalones();
+    });
   }
 
   String _mensajeDeError(Object e) {
@@ -104,10 +107,20 @@ class _MisSalonesScreenState extends State<MisSalonesScreen> {
               final s = salones[i];
               return Card(
                 child: ListTile(
-                  leading: Icon(s.esTutoria ? Icons.person : Icons.groups),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                  leading: Icon(s.esTutoria ? Icons.person : Icons.groups,
+                      size: 32),
                   title: Text(s.nombre,
                       style: const TextStyle(fontSize: 18)),
-                  subtitle: Text(s.esTutoria ? 'Tutoría' : 'Salón'),
+                  subtitle: Text(s.esTutoria ? 'Tutoría individual' : 'Salón'),
+                  trailing: const Icon(Icons.chevron_right, size: 28),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SalonDetalleScreen(salon: s),
+                    ),
+                  ),
                 ),
               );
             },

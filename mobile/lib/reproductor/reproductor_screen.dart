@@ -1,120 +1,325 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
-class ReproductorScreen extends StatefulWidget {
-  final String titulo;
-  final String texto;
-  final String videoUrl;
-  final String audioUrl;
+import '../actividades/modelos.dart';
 
-  // Los valores por defecto son de prueba. Luego se pasan los del material real.
-  const ReproductorScreen({
-    super.key,
-    this.titulo = 'Material de estudio',
-    this.texto =
-        'Bienvenido al material de estudio. Este texto se puede escuchar '
-            'en voz alta con el lector de voz.',
-    this.videoUrl =
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-    this.audioUrl =
-        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-  });
+/// Muestra un material de apoyo: texto (con lectura en voz alta),
+/// video o audio. La URL es firmada (MinIO), por eso se usa un Dio sin token.
+class ReproductorScreen extends StatelessWidget {
+  final MaterialItem material;
+  const ReproductorScreen({super.key, required this.material});
 
   @override
-  State<ReproductorScreen> createState() => _ReproductorScreenState();
+  Widget build(BuildContext context) {
+    final Widget cuerpo;
+    switch (material.tipo) {
+      case TipoMaterial.texto:
+        cuerpo = _VistaTexto(url: material.url);
+      case TipoMaterial.video:
+        cuerpo = _VistaVideo(url: material.url);
+      case TipoMaterial.audio:
+        cuerpo = _VistaAudio(url: material.url, nombre: material.nombre);
+      case TipoMaterial.pdf:
+      case TipoMaterial.otro:
+        cuerpo = const _Aviso(
+            'Este archivo se abre fuera de la app desde el menú de la actividad.');
+    }
+    return Scaffold(
+      appBar: AppBar(title: Text(material.nombre)),
+      body: SafeArea(child: cuerpo),
+    );
+  }
 }
 
-class _ReproductorScreenState extends State<ReproductorScreen> {
-  final FlutterTts _tts = FlutterTts();
-  final AudioPlayer _audio = AudioPlayer();
-  late final VideoPlayerController _video;
+class _Aviso extends StatelessWidget {
+  final String texto;
+  final VoidCallback? reintentar;
+  const _Aviso(this.texto, {this.reintentar});
 
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off, size: 56, color: Colors.blueGrey),
+              const SizedBox(height: 12),
+              Text(texto,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18)),
+              if (reintentar != null) ...[
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: reintentar,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Reintentar'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+}
+
+// ---------------- Texto ----------------
+
+class _VistaTexto extends StatefulWidget {
+  final String url;
+  const _VistaTexto({required this.url});
+
+  @override
+  State<_VistaTexto> createState() => _VistaTextoState();
+}
+
+class _VistaTextoState extends State<_VistaTexto> {
+  final FlutterTts _tts = FlutterTts();
+  String? _texto;
+  bool _error = false;
   bool _hablando = false;
-  bool _videoListo = false;
-  String? _errorVideo;
-  String? _errorAudio;
 
   @override
   void initState() {
     super.initState();
+    _cargar();
     _iniciarTts();
-    _iniciarVideo();
-    _iniciarAudio();
   }
 
-  // ---------- Inicialización ----------
+  Future<void> _cargar() async {
+    setState(() {
+      _error = false;
+      _texto = null;
+    });
+    try {
+      final res = await Dio().get<List<int>>(
+        widget.url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final texto = utf8.decode(res.data ?? const [], allowMalformed: true);
+      if (mounted) {
+        setState(() {
+          _texto = texto;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _error = true;
+        });
+      }
+    }
+  }
 
   Future<void> _iniciarTts() async {
-    await _tts.setLanguage('es-MX');
-    await _tts.setSpeechRate(0.5);
-    _tts.setCompletionHandler(() {
-      if (mounted) setState(() => _hablando = false);
-    });
-    _tts.setCancelHandler(() {
-      if (mounted) setState(() => _hablando = false);
-    });
-    _tts.setErrorHandler((msg) {
-      if (mounted) setState(() => _hablando = false);
-    });
-  }
-
-  Future<void> _iniciarVideo() async {
-    _video = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     try {
-      await _video.initialize();
-      _video.addListener(() {
-        if (mounted) setState(() {});
-      });
-      if (mounted) setState(() => _videoListo = true);
+      await _tts.setLanguage('es-MX');
+      await _tts.setSpeechRate(0.5);
+      void fin() {
+        if (mounted) {
+          setState(() {
+            _hablando = false;
+          });
+        }
+      }
+      _tts.setCompletionHandler(fin);
+      _tts.setCancelHandler(fin);
+      _tts.setErrorHandler((_) => fin());
     } catch (_) {
-      if (mounted) setState(() => _errorVideo = 'No se pudo cargar el video.');
+      // Sin lector de voz disponible: el texto se puede leer igual
     }
   }
 
-  Future<void> _iniciarAudio() async {
-    try {
-      await _audio.setUrl(widget.audioUrl);
-    } catch (_) {
-      if (mounted) setState(() => _errorAudio = 'No se pudo cargar el audio.');
-    }
-  }
-
-  // ---------- Controles (solo uno suena a la vez) ----------
-
-  Future<void> _alternarTts() async {
+  Future<void> _alternarVoz() async {
     if (_hablando) {
       await _tts.stop();
-      if (mounted) setState(() => _hablando = false);
+      if (mounted) {
+        setState(() {
+          _hablando = false;
+        });
+      }
       return;
     }
-    if (_videoListo) await _video.pause();
-    await _audio.pause();
-    setState(() => _hablando = true);
-    await _tts.speak(widget.texto);
+    setState(() {
+      _hablando = true;
+    });
+    await _tts.speak(_texto ?? '');
   }
 
-  Future<void> _alternarVideo() async {
-    if (_video.value.isPlaying) {
-      await _video.pause();
-      return;
+  @override
+  void dispose() {
+    _tts.stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error) {
+      return _Aviso('No pudimos cargar la lectura.', reintentar: _cargar);
     }
-    await _tts.stop();
-    await _audio.pause();
-    if (mounted) setState(() => _hablando = false);
-    await _video.play();
+    final texto = _texto;
+    if (texto == null) return const Center(child: CircularProgressIndicator());
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.tonalIcon(
+            onPressed: _alternarVoz,
+            icon: Icon(_hablando ? Icons.stop : Icons.volume_up),
+            label: Text(_hablando ? 'Detener lectura' : 'Leer en voz alta'),
+          ),
+        ),
+        const SizedBox(height: 20),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: SelectableText(
+            texto.trim().isEmpty ? 'Este material está vacío.' : texto,
+            style: const TextStyle(fontSize: 20, height: 1.7),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------- Video ----------------
+
+class _VistaVideo extends StatefulWidget {
+  final String url;
+  const _VistaVideo({required this.url});
+
+  @override
+  State<_VistaVideo> createState() => _VistaVideoState();
+}
+
+class _VistaVideoState extends State<_VistaVideo> {
+  late final VideoPlayerController _video =
+      VideoPlayerController.networkUrl(Uri.parse(widget.url));
+  bool _listo = false;
+  bool _error = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _iniciar();
   }
 
-  Future<void> _alternarAudio() async {
+  Future<void> _iniciar() async {
+    try {
+      await _video.initialize();
+      _video.addListener(_alCambiar);
+      if (mounted) {
+        setState(() {
+          _listo = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _error = true;
+        });
+      }
+    }
+  }
+
+  void _alCambiar() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _video.removeListener(_alCambiar);
+    _video.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error) return const _Aviso('No pudimos cargar el video.');
+    if (!_listo) return const Center(child: CircularProgressIndicator());
+
+    final terminado = _video.value.position >= _video.value.duration &&
+        !_video.value.isPlaying;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AspectRatio(
+            aspectRatio: _video.value.aspectRatio,
+            child: VideoPlayer(_video),
+          ),
+        ),
+        const SizedBox(height: 12),
+        VideoProgressIndicator(_video, allowScrubbing: true),
+        const SizedBox(height: 8),
+        Center(
+          child: IconButton(
+            iconSize: 64,
+            tooltip: _video.value.isPlaying ? 'Pausar' : 'Reproducir',
+            onPressed: () async {
+              if (_video.value.isPlaying) {
+                await _video.pause();
+              } else {
+                if (terminado) await _video.seekTo(Duration.zero);
+                await _video.play();
+              }
+            },
+            icon: Icon(_video.value.isPlaying
+                ? Icons.pause_circle
+                : Icons.play_circle),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------- Audio ----------------
+
+class _VistaAudio extends StatefulWidget {
+  final String url;
+  final String nombre;
+  const _VistaAudio({required this.url, required this.nombre});
+
+  @override
+  State<_VistaAudio> createState() => _VistaAudioState();
+}
+
+class _VistaAudioState extends State<_VistaAudio> {
+  final AudioPlayer _audio = AudioPlayer();
+  bool _error = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _iniciar();
+  }
+
+  Future<void> _iniciar() async {
+    try {
+      await _audio.setUrl(widget.url);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _error = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _alternar() async {
     if (_audio.playing &&
         _audio.processingState != ProcessingState.completed) {
       await _audio.pause();
       return;
     }
-    await _tts.stop();
-    if (_videoListo) await _video.pause();
-    if (mounted) setState(() => _hablando = false);
     if (_audio.processingState == ProcessingState.completed) {
       await _audio.seek(Duration.zero);
     }
@@ -129,150 +334,66 @@ class _ReproductorScreenState extends State<ReproductorScreen> {
 
   @override
   void dispose() {
-    _tts.stop();
     _audio.dispose();
-    _video.dispose();
     super.dispose();
-  }
-
-  // ---------- Interfaz ----------
-
-  Widget _tarjeta(String titulo, Widget contenido) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              titulo,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            contenido,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _seccionTexto() {
-    return _tarjeta(
-      'Lectura en voz alta',
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(widget.texto, style: const TextStyle(fontSize: 16)),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _alternarTts,
-            icon: Icon(_hablando ? Icons.stop : Icons.volume_up),
-            label: Text(_hablando ? 'Detener lectura' : 'Leer en voz alta'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _seccionVideo() {
-    Widget contenido;
-    if (_errorVideo != null) {
-      contenido = Text(_errorVideo!, style: const TextStyle(color: Colors.red));
-    } else if (!_videoListo) {
-      contenido = const Center(child: CircularProgressIndicator());
-    } else {
-      contenido = Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: AspectRatio(
-              aspectRatio: _video.value.aspectRatio,
-              child: VideoPlayer(_video),
-            ),
-          ),
-          const SizedBox(height: 8),
-          VideoProgressIndicator(_video, allowScrubbing: true),
-          IconButton(
-            iconSize: 40,
-            onPressed: _alternarVideo,
-            icon: Icon(
-              _video.value.isPlaying ? Icons.pause_circle : Icons.play_circle,
-            ),
-          ),
-        ],
-      );
-    }
-    return _tarjeta('Video', contenido);
-  }
-
-  Widget _seccionAudio() {
-    if (_errorAudio != null) {
-      return _tarjeta(
-        'Audio',
-        Text(_errorAudio!, style: const TextStyle(color: Colors.red)),
-      );
-    }
-    return _tarjeta(
-      'Audio',
-      StreamBuilder<PlayerState>(
-        stream: _audio.playerStateStream,
-        builder: (context, snap) {
-          final estado = snap.data?.processingState;
-          final sonando =
-              (snap.data?.playing ?? false) && estado != ProcessingState.completed;
-          final cargando = estado == ProcessingState.loading ||
-              estado == ProcessingState.buffering;
-          return Row(
-            children: [
-              IconButton(
-                iconSize: 40,
-                onPressed: cargando ? null : _alternarAudio,
-                icon: Icon(sonando ? Icons.pause_circle : Icons.play_circle),
-              ),
-              Expanded(
-                child: StreamBuilder<Duration>(
-                  stream: _audio.positionStream,
-                  builder: (context, posSnap) {
-                    final pos = posSnap.data ?? Duration.zero;
-                    final total = _audio.duration ?? Duration.zero;
-                    final max = total.inMilliseconds.toDouble();
-                    final valor = pos.inMilliseconds
-                        .clamp(0, total.inMilliseconds)
-                        .toDouble();
-                    return Column(
-                      children: [
-                        Slider(
-                          value: valor,
-                          max: max > 0 ? max : 1,
-                          onChanged: (v) =>
-                              _audio.seek(Duration(milliseconds: v.round())),
-                        ),
-                        Text('${_fmt(pos)} / ${_fmt(total)}'),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.titulo)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _seccionTexto(),
-          const SizedBox(height: 16),
-          _seccionVideo(),
-          const SizedBox(height: 16),
-          _seccionAudio(),
-        ],
+    if (_error) return const _Aviso('No pudimos cargar el audio.');
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.headphones, size: 80, color: Colors.indigo),
+            const SizedBox(height: 16),
+            Text(widget.nombre,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 16),
+            StreamBuilder<PlayerState>(
+              stream: _audio.playerStateStream,
+              builder: (context, snap) {
+                final estado = snap.data?.processingState;
+                final sonando = (snap.data?.playing ?? false) &&
+                    estado != ProcessingState.completed;
+                final cargando = estado == ProcessingState.loading ||
+                    estado == ProcessingState.buffering;
+                return IconButton(
+                  iconSize: 72,
+                  tooltip: sonando ? 'Pausar' : 'Reproducir',
+                  onPressed: cargando ? null : _alternar,
+                  icon: Icon(sonando ? Icons.pause_circle : Icons.play_circle),
+                );
+              },
+            ),
+            StreamBuilder<Duration>(
+              stream: _audio.positionStream,
+              builder: (context, posSnap) {
+                final pos = posSnap.data ?? Duration.zero;
+                final total = _audio.duration ?? Duration.zero;
+                final max = total.inMilliseconds.toDouble();
+                final valor =
+                    pos.inMilliseconds.clamp(0, total.inMilliseconds).toDouble();
+                return Column(
+                  children: [
+                    Slider(
+                      value: valor,
+                      max: max > 0 ? max : 1,
+                      onChanged: (v) =>
+                          _audio.seek(Duration(milliseconds: v.round())),
+                    ),
+                    Text('${_fmt(pos)} / ${_fmt(total)}',
+                        style: const TextStyle(fontSize: 16)),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

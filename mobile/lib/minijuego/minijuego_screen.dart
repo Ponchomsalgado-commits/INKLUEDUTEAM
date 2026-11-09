@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/pregunta_data.dart';
+import '../perfil/insignias.dart';
 import '../widgets/minijuego_factory.dart';
 import 'envio_local.dart';
 import 'progreso_api.dart';
@@ -18,24 +19,6 @@ class Pregunta {
   });
 }
 
-const List<Pregunta> _preguntasDePrueba = [
-  Pregunta(
-    id: 'p1',
-    enunciado: '¿Cuál es la capital de Colombia?',
-    opciones: ['Medellín', 'Bogotá', 'Cali', 'Cartagena'],
-  ),
-  Pregunta(
-    id: 'p2',
-    enunciado: '¿Cuánto es 7 x 8?',
-    opciones: ['54', '56', '58', '64'],
-  ),
-  Pregunta(
-    id: 'p3',
-    enunciado: '¿Qué planeta es el más cercano al Sol?',
-    opciones: ['Venus', 'Marte', 'Mercurio', 'Júpiter'],
-  ),
-];
-
 class MinijuegoScreen extends StatefulWidget {
   final String id;
   final String titulo;
@@ -45,10 +28,10 @@ class MinijuegoScreen extends StatefulWidget {
 
   const MinijuegoScreen({
     super.key,
-    this.id = 'prueba',
-    this.titulo = 'Minijuego',
-    this.preguntas = _preguntasDePrueba,
-    this.type = 'seleccionar_objetivo',
+    required this.id,
+    required this.titulo,
+    required this.preguntas,
+    required this.type,
     this.skin,
   });
 
@@ -65,12 +48,51 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
   late List<int?> _respuestas =
       List<int?>.filled(widget.preguntas.length, null);
 
+  /// Insignias antes de jugar, para celebrar las nuevas al terminar.
+  MisInsignias? _insigniasAntes;
+  List<String> _logros = const [];
+
   int get _total => widget.preguntas.length;
 
   @override
   void initState() {
     super.initState();
     _retomarProgreso();
+    _guardarInsigniasAntes();
+  }
+
+  Future<void> _guardarInsigniasAntes() async {
+    try {
+      final m = await MisInsignias.cargar();
+      _insigniasAntes ??= m;
+    } catch (_) {
+      // Sin red: simplemente no celebramos insignias esta vez
+    }
+  }
+
+  /// Las insignias se calculan en segundo plano en el backend: esperamos
+  /// un momento y comparamos con las que tenía antes de jugar.
+  Future<void> _buscarLogros() async {
+    final antes = _insigniasAntes;
+    if (antes == null) return;
+    for (final espera in const [1000, 2000]) {
+      await Future<void>.delayed(Duration(milliseconds: espera));
+      if (!mounted) return;
+      try {
+        final despues = await MisInsignias.cargar();
+        final nuevos = logrosNuevos(antes, despues);
+        if (nuevos.isNotEmpty) {
+          if (!mounted) return;
+          setState(() {
+            _logros = nuevos;
+          });
+          _insigniasAntes = despues;
+          return;
+        }
+      } catch (_) {
+        return;
+      }
+    }
   }
 
   Future<void> _retomarProgreso() async {
@@ -136,6 +158,7 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
       _envio = resultado;
       _enviando = false;
     });
+    if (resultado.estado == EstadoEnvio.exito) _buscarLogros();
   }
 
   void _reiniciar() {
@@ -143,6 +166,7 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
       _actual = 0;
       _terminado = false;
       _envio = null;
+      _logros = const [];
       _respuestas = List<int?>.filled(_total, null);
     });
     ProgresoLocal.borrar(widget.id);
@@ -248,6 +272,7 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
           detalle: (r.score != null && r.total != null)
               ? '${r.score} de ${r.total} respuestas correctas'
               : 'Tus respuestas se enviaron.',
+          extra: _logros.isEmpty ? null : _tarjetaLogros(),
           botones: [
             ElevatedButton(
               onPressed: _reiniciar,
@@ -298,14 +323,44 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
     }
   }
 
+  Widget _tarjetaLogros() {
+    return Card(
+      color: const Color(0xFFFFF4E0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Icon(Icons.military_tech, size: 48, color: Color(0xFFFF9F1C)),
+            const SizedBox(height: 8),
+            for (final l in _logros)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  l,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            const SizedBox(height: 4),
+            const Text('Mírala en "Mi perfil".',
+                style: TextStyle(fontSize: 15)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _panel({
     required Widget icono,
     required String titulo,
     String? detalle,
+    Widget? extra,
     required List<Widget> botones,
   }) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -325,6 +380,10 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 18),
               ),
+            ],
+            if (extra != null) ...[
+              const SizedBox(height: 20),
+              extra,
             ],
             if (botones.isNotEmpty) const SizedBox(height: 32),
             for (var i = 0; i < botones.length; i++) ...[
