@@ -6,7 +6,7 @@ class SalonesService {
   SalonesService(this.api);
 
   Future<List<Salon>> misSalones() async {
-    final res = await api.dio.get('/api/v1/classrooms/me');
+    final res = await api.dio.get('/api/v1/classrooms/mine');
     final lista = res.data as List;
     return lista
         .map((e) => Salon.fromJson(e as Map<String, dynamic>))
