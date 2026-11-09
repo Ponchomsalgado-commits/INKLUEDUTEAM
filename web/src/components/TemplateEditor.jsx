@@ -1,4 +1,4 @@
-import { opcionesIniciales, preguntaVacia } from "./preguntaVacia";
+import { opcionesIniciales, preguntaVacia } from "./shared/preguntaVacia";
 
 // Ids q1, q2... estables: al quitar una pregunta no se reutiliza su id (ver sección 1.8.2)
 function siguienteId(preguntas) {

@@ -6,6 +6,7 @@ import MisSalones from './Pages/MisSalones';
 import CrearSalones from './Pages/CrearSalones';
 import CrearActividad from './Pages/CrearActividad';
 import MisActividades from './Pages/MisActividades';
+import PrevisualizarActividad from './Pages/PrevisualizarActividad';
 import Tutorias from './Pages/Tutorias';
 import { logout } from './auth/authService';
 import { getAccessToken, getRefreshToken } from './auth/tokenStore';
@@ -13,7 +14,7 @@ import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 // Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
 const RUTAS_SIN_SESION = ['/', '/login', '/register'];
 // Pantallas que requieren sesión; sin ella se muestra el login
-const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/actividades', '/actividades/editar', '/tutorias'];
+const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/actividades', '/actividades/editar', '/actividades/previa', '/tutorias'];
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -104,6 +105,8 @@ return (
         haySesion ? <MisActividades /> : <Login />
       ) : ruta === '/actividades/editar' ? (
         haySesion ? <CrearActividad /> : <Login />
+      ) : ruta === '/actividades/previa' ? (
+        haySesion ? <PrevisualizarActividad /> : <Login />
       ) : ruta === '/tutorias' ? (
         haySesion ? <Tutorias /> : <Login />
       ) : ruta === '/salones/tutorias/crear' ? (

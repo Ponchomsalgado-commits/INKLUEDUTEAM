@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import { subirMaterial } from "../services/mediaService";
-import { mensajeDeError } from "./errorHandler";
+import { mensajeDeError } from "./shared/errorHandler";
 import {
   FORMATOS_PERMITIDOS,
   ICONOS_MATERIAL,
   formatearTamano,
   formatoPermitido,
   tipoDeMaterial,
-} from "./materialUtils";
+} from "./shared/materialUtils";
 
 // Zona de arrastrar y soltar para el material didáctico de una actividad.
 // Cada archivo se sube en cuanto se suelta; la actividad solo guarda las claves (key) de los que quedaron listos.
