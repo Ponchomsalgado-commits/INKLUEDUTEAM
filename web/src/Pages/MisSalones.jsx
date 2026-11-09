@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { obtenerMisSalones, obtenerMiembros } from "../services/classroomService";
 
 // T2101: Pantalla "Mis salones": ver código y lista de usuarios unidos.
@@ -62,9 +63,9 @@ export default function MisSalones() {
       <section aria-labelledby="lista-salones" className="seccion-salones">
         <div className="encabezado-seccion">
           <h2 id="lista-salones">Tus salones</h2>
-          <a href="/salones/crear" className="btn-crear">
+          <Link to="/salones/crear" className="btn-crear">
             + Crear salón
-          </a>
+          </Link>
         </div>
 
         {cargandoSalones && <p role="status">Cargando salones...</p>}

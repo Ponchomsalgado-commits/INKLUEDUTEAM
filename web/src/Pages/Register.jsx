@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { register } from '../auth/authService';
+import { Link } from 'react-router';
+import { useAuth } from '../auth/authContext';
 
 // Debe coincidir con PASSWORD_MIN_LENGTH del backend (backend/src/auth/dto/register.dto.ts)
 const PASSWORD_MIN_LENGTH = 8;
 
 export default function Register() {
+  const { registrarse } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
@@ -19,12 +21,9 @@ export default function Register() {
 
     try {
       // La web solo registra profesores: authService fija el rol
-      await register({ email, password });
+      // El registro ya deja la sesión iniciada; RutaPublica redirige sola a Mis salones
+      await registrarse({ email, password });
       setMensaje('Registro completado correctamente');
-      setEmail('');
-      setPassword('');
-      // El registro ya deja la sesión iniciada (authService guarda los tokens)
-      window.location.assign('/salones');
     } catch (error) {
       setEsError(true);
       if (error.response?.status === 409) {
@@ -82,7 +81,7 @@ export default function Register() {
         </p>
       )}
       <p className="auth-cambio">
-        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+        ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
       </p>
     </section>
   );

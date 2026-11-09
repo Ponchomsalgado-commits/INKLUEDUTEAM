@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { login } from '../auth/authService';
+import { Link } from 'react-router';
+import { useAuth } from '../auth/authContext';
 
 export default function Login() {
+  const { iniciarSesion } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
@@ -15,10 +17,9 @@ export default function Login() {
     setCargando(true);
 
     try {
-      await login(email, password);
+      // Al marcar la sesión, RutaPublica redirige sola (a Mis salones o a la página pedida antes)
+      await iniciarSesion(email, password);
       setMensaje('Inicio de sesión correcto');
-      // Recargar la página es seguro: apiClient renueva el access_token con el refresh_token
-      window.location.assign('/salones');
     } catch (error) {
       setEsError(true);
       if (error.code === 'ROL_NO_PERMITIDO') {
@@ -73,7 +74,7 @@ export default function Login() {
         </p>
       )}
       <p className="auth-cambio">
-        ¿No tienes cuenta? <a href="/register">Regístrate</a>
+        ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
       </p>
     </section>
   );

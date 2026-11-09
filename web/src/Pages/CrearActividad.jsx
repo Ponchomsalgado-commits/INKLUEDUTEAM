@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import TemplateEditor from "../components/TemplateEditor";
 import SubirMaterial from "../components/SubirMaterial";
-import { materialDesdeReferencia } from "../components/materialUtils";
-import { opcionesIniciales, preguntaVacia } from "../components/preguntaVacia";
+import { materialDesdeReferencia } from "../components/shared/materialUtils";
+import { opcionesIniciales, preguntaVacia } from "../components/shared/preguntaVacia";
 import {
   obtenerPlantillas,
   obtenerActividad,
@@ -10,8 +11,8 @@ import {
   editarActividad,
   publicarActividad,
 } from "../services/activityService";
-import { validarPreguntas } from "../components/validarPreguntas";
-import { mensajeDeError } from "../components/errorHandler";
+import { validarPreguntas } from "../components/shared/validarPreguntas";
+import { mensajeDeError } from "../components/shared/errorHandler";
 
 // Pantalla para editar una copia de la plantilla elegida en /salones/crear y,
 // al guardar, publicarla en el salón recién creado..
@@ -23,7 +24,7 @@ function plantillaDeActividad(plantillas, actividad) {
 }
 
 export default function CrearActividad() {
-  const params = new URLSearchParams(window.location.search);
+  const [params] = useSearchParams();
   const plantillaId = params.get("plantilla");
   const actividadId = params.get("actividad");
   const salonId = params.get("salon");
@@ -128,14 +129,16 @@ export default function CrearActividad() {
     }
   };
 
+  const idActividad = esEdicion ? actividadId : actividadCreada?.id;
+
   const enlaceVolver = esEdicion ? (
-    <a href="/actividades" className="enlace-volver">
+    <Link to="/actividades" className="enlace-volver">
       ← Volver a Mis actividades
-    </a>
+    </Link>
   ) : (
-    <a href="/salones/crear" className="enlace-volver">
+    <Link to="/salones/crear" className="enlace-volver">
       ← Volver a Crear salón
-    </a>
+    </Link>
   );
 
   if (cargando) {
@@ -211,7 +214,7 @@ export default function CrearActividad() {
         {resultado && (
           <p role="status">
             Actividad "{resultado.titulo}" {resultado.mensaje}.{" "}
-            <a href="/actividades">Ver mis actividades</a>
+            <Link to="/actividades">Ver mis actividades</Link>
           </p>
         )}
 
@@ -228,6 +231,11 @@ export default function CrearActividad() {
                 ? "Guardar y publicar"
                 : "Guardar actividad"}
         </button>
+        {idActividad && (
+          <Link to={`/actividades/previa?actividad=${idActividad}`} className="plantilla-usar">
+            Previsualizar como alumno
+          </Link>
+        )}
       </form>
     </div>
   );
