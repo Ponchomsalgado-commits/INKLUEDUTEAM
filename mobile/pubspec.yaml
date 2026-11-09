@@ -39,6 +39,8 @@ dependencies:
   video_player: ^2.14.1
   just_audio: ^0.10.6
   flutter_tts: ^4.2.5
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:

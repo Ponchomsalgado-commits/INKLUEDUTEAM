@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'progreso_local.dart';
+
 
 class Pregunta {
   final String enunciado;
@@ -32,11 +34,14 @@ const List<Pregunta> _preguntasDePrueba = [
 ];
 
 class MinijuegoScreen extends StatefulWidget {
+  /// Identifica el minijuego. El progreso se guarda con este id.
+  final String id;
   final String titulo;
   final List<Pregunta> preguntas;
 
   const MinijuegoScreen({
     super.key,
+    this.id = 'prueba', // <- línea nueva
     this.titulo = 'Minijuego',
     this.preguntas = _preguntasDePrueba,
   });
@@ -48,6 +53,7 @@ class MinijuegoScreen extends StatefulWidget {
 class _MinijuegoScreenState extends State<MinijuegoScreen> {
   int _actual = 0;
   bool _terminado = false;
+  bool _cargado = false; // false mientras se lee el progreso guardado
   late List<int?> _respuestas =
       List<int?>.filled(widget.preguntas.length, null);
 
@@ -61,19 +67,52 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
     return n;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _retomarProgreso();
+  }
+
+  Future<void> _retomarProgreso() async {
+    final guardado = await ProgresoLocal.leer(widget.id, _total);
+    if (!mounted) return;
+
+    var retomado = false;
+    setState(() {
+      if (guardado != null) {
+        _respuestas = guardado.respuestas;
+        _actual = guardado.actual;
+        retomado = _actual > 0 || _respuestas.any((r) => r != null);
+      }
+      _cargado = true;
+    });
+
+    if (retomado) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Retomaste donde te quedaste.')),
+      );
+    }
+  }
+
   void _seleccionar(int opcion) {
     setState(() => _respuestas[_actual] = opcion);
+    ProgresoLocal.guardar(widget.id, _actual, _respuestas);
   }
 
   void _anterior() {
-    if (_actual > 0) setState(() => _actual--);
+    if (_actual > 0) {
+      setState(() => _actual--);
+      ProgresoLocal.guardar(widget.id, _actual, _respuestas);
+    }
   }
 
   void _siguiente() {
     if (_actual < _total - 1) {
       setState(() => _actual++);
+      ProgresoLocal.guardar(widget.id, _actual, _respuestas);
     } else {
       setState(() => _terminado = true);
+      ProgresoLocal.borrar(widget.id);
     }
   }
 
@@ -83,16 +122,25 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
       _terminado = false;
       _respuestas = List<int?>.filled(_total, null);
     });
+    ProgresoLocal.borrar(widget.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_cargado) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.titulo)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (_total == 0) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.titulo)),
         body: const Center(child: Text('Este minijuego aún no tiene preguntas.')),
       );
     }
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.titulo)),
       body: SafeArea(
@@ -100,8 +148,6 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
       ),
     );
   }
-
-
 
   Widget _pregunta() {
     final p = widget.preguntas[_actual];
@@ -164,7 +210,6 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
       ],
     );
   }
-
 
   Widget _resultado() {
     return Center(

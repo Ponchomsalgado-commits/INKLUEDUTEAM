@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'auth/auth_gate.dart';
 import 'auth/login_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+Future<void> main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
   ApiClient().onSessionExpired = () {
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
