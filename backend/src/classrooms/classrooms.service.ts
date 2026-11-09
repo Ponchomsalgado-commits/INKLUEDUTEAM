@@ -91,6 +91,33 @@ export class ClassroomsService {
     return memberships.map((m) => m.classroom);
   }
 
+  /**
+   * Detalle de un salón: el profesor dueño lo ve con conteos; un alumno miembro lo ve
+   * con el correo de su profesor. Para cualquier otro es 404.
+   */
+  async findOneFor(userId: string, role: Role, classroomId: string) {
+    const classroom = await this.prisma.classroom.findFirst({
+      where:
+        role === Role.PROFESOR
+          ? { id: classroomId, teacherId: userId }
+          : { id: classroomId, members: { some: { studentId: userId } } },
+      include: {
+        teacher: { select: { id: true, email: true } },
+        _count: { select: { members: true, assignments: true } },
+      },
+    });
+    if (!classroom) {
+      throw new NotFoundException('El salón no existe.');
+    }
+    const { _count, teacher, ...datos } = classroom;
+    return {
+      ...datos,
+      teacher,
+      memberCount: _count.members,
+      assignmentCount: _count.assignments,
+    };
+  }
+
   /** Solo el dueño del salón ve sus miembros; para otro profesor es 404. Nunca se devuelve passwordHash. */
   async listMembers(teacherId: string, classroomId: string) {
     const classroom = await this.prisma.classroom.findFirst({

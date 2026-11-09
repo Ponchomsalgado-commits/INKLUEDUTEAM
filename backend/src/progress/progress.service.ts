@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ActivitiesService } from '../activities/activities.service';
+import { BadgesService } from '../badges/badges.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubmitAttemptDto } from './dto/submit-attempt.dto';
 
@@ -37,6 +38,7 @@ export class ProgressService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly activities: ActivitiesService,
+    private readonly badges: BadgesService,
   ) {}
 
   /**
@@ -127,6 +129,15 @@ export class ProgressService {
       }
       throw error;
     }
+    // Insignias en segundo plano: no retrasan la respuesta (Sprint 6)
+    this.badges.evaluarEnSegundoPlano({
+      studentId,
+      activityId: activity.id,
+      progressId: creado.id,
+      score: creado.score,
+      total: creado.totalPreguntas,
+      submittedAt: creado.submittedAt,
+    });
     return this.present(creado);
   }
 

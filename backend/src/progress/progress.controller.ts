@@ -6,17 +6,22 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { JwtPayload } from '../auth/jwt-payload';
 import { SubmitAttemptDto } from './dto/submit-attempt.dto';
+import { AssignmentsService } from '../assignments/assignments.service';
 import { ProgressService } from './progress.service';
 
 @Controller('progress')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProgressController {
-  constructor(private readonly progressService: ProgressService) {}
+  constructor(
+    private readonly progressService: ProgressService,
+    private readonly assignments: AssignmentsService,
+  ) {}
 
   /** POST /api/v1/progress — el estudiante envía un intento y recibe su corrección. (CLAUDE) */
   @Post()
   @Roles(Role.ESTUDIANTE)
-  submit(@CurrentUser() user: JwtPayload, @Body() dto: SubmitAttemptDto) {
+  async submit(@CurrentUser() user: JwtPayload, @Body() dto: SubmitAttemptDto) {
+    await this.assignments.assertStudentCanPlay(user.sub, dto.activityId);
     return this.progressService.submit(user.sub, dto);
   }
 }

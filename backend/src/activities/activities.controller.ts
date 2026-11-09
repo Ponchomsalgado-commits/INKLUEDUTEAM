@@ -14,6 +14,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { JwtPayload } from '../auth/jwt-payload';
+import { AssignmentsService } from '../assignments/assignments.service';
 import { ActivitiesService } from './activities.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
@@ -21,7 +22,10 @@ import { UpdateActivityDto } from './dto/update-activity.dto';
 @Controller('activities')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ActivitiesController {
-  constructor(private readonly activitiesService: ActivitiesService) {}
+  constructor(
+    private readonly activitiesService: ActivitiesService,
+    private readonly assignments: AssignmentsService,
+  ) {}
 
   /** POST /api/v1/activities — crea una actividad propia a partir de una plantilla. (CLAUDE) */
   @Post()
@@ -58,7 +62,9 @@ export class ActivitiesController {
   /** GET /api/v1/activities/:id/play — actividad lista para jugar (rol estudiante). (CLAUDE)*/
   @Get(':id/play')
   @Roles(Role.ESTUDIANTE)
-  play(@Param('id', ParseUUIDPipe) id: string) {
+  async play(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    // Solo actividades publicadas en alguno de sus salones (Sprint 5)
+    await this.assignments.assertStudentCanPlay(user.sub, id);
     return this.activitiesService.findForPlay(id);
   }
 }

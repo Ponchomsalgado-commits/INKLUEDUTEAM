@@ -21,8 +21,9 @@ model User {
 
   classroomsTaught     Classroom[]       @relation("TeacherClassrooms")
   classroomMemberships ClassroomMember[] @relation("StudentMemberships")
-  activities           TeacherActivity[]  @relation("TeacherActivities")
+  activities           TeacherActivity[] @relation("TeacherActivities")
   progress             Progress[]
+  badges               StudentBadge[]
 
   @@map("users")
 }
@@ -33,14 +34,15 @@ enum ClassroomType {
 }
 
 model Classroom {
-  id        String            @id @default(uuid())
-  teacherId String            @map("teacher_id")
-  teacher   User              @relation("TeacherClassrooms", fields: [teacherId], references: [id])
-  name      String
-  joinCode  String            @unique @map("join_code")
-  type      ClassroomType
-  createdAt DateTime          @default(now()) @map("created_at")
-  members   ClassroomMember[]
+  id          String            @id @default(uuid())
+  teacherId   String            @map("teacher_id")
+  teacher     User              @relation("TeacherClassrooms", fields: [teacherId], references: [id])
+  name        String
+  joinCode    String            @unique @map("join_code")
+  type        ClassroomType
+  createdAt   DateTime          @default(now()) @map("created_at")
+  members     ClassroomMember[]
+  assignments Assignment[]
 
   @@map("classrooms")
 }
@@ -86,7 +88,8 @@ model TeacherActivity {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
-  progress Progress[]
+  progress    Progress[]
+  assignments Assignment[]
 
   @@index([teacherId])
   @@map("teacher_activities")
@@ -121,4 +124,44 @@ model ProgressAnswer {
 
   @@index([progressId])
   @@map("progress_answers")
+}
+
+// Sprint 5: una actividad publicada hacia un salón o tutoría, con fecha límite
+model Assignment {
+  id          String          @id @default(uuid())
+  activityId  String          @map("activity_id")
+  activity    TeacherActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  classroomId String          @map("classroom_id")
+  classroom   Classroom       @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  dueDate     DateTime        @map("due_date")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@unique([activityId, classroomId])
+  @@index([classroomId])
+  @@map("assignments")
+}
+
+// Sprint 6: catálogo de insignias (solo positivas) y las que obtuvo cada estudiante
+model Badge {
+  id          String         @id @default(uuid())
+  code        String         @unique @db.VarChar(40)
+  name        String         @db.VarChar(80)
+  description String
+  icon        String         @default("star") @db.VarChar(40)
+  awards      StudentBadge[]
+
+  @@map("badges")
+}
+
+model StudentBadge {
+  studentId   String   @map("student_id")
+  student     User     @relation(fields: [studentId], references: [id])
+  badgeId     String   @map("badge_id")
+  badge       Badge    @relation(fields: [badgeId], references: [id])
+  streakCount Int      @default(1) @map("streak_count")
+  awardedAt   DateTime @default(now()) @map("awarded_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@id([studentId, badgeId])
+  @@map("student_badges")
 }

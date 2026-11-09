@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ActivitiesService } from '../activities/activities.service';
+import { BadgesService } from '../badges/badges.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubmitAttemptDto } from './dto/submit-attempt.dto';
 import { ProgressService } from './progress.service';
@@ -49,9 +50,11 @@ describe('ProgressService', () => {
     $transaction: jest.fn(),
   };
   const activities = { findContentForGrading: jest.fn() };
+  const badges = { evaluarEnSegundoPlano: jest.fn() };
   const service = new ProgressService(
     prisma as unknown as PrismaService,
     activities as unknown as ActivitiesService,
+    badges as unknown as BadgesService,
   );
 
   beforeEach(() => {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prueba de humo de la API: recorre los flujos de los Sprints 1 a 4 contra un backend en marcha.
+# Prueba de humo de la API: recorre los flujos de los Sprints 1 a 6 contra un backend en marcha.
 # Uso (Git Bash en Windows, o cualquier shell con curl):
 #   ./scripts/smoke-test.sh                          # desarrollo: http://localhost:3000
 #   ./scripts/smoke-test.sh http://mi-servidor       # servidor (a través de Nginx)
@@ -133,6 +133,25 @@ verificar "tipo no permitido (.exe) rechazado" 415 "$(subir "$ARCHIVO_EXE" appli
 verificar "actividad con material propio" 201 "$(peticion POST /activities "{\"templateId\":\"$PLANTILLA\",\"title\":\"Con material\",\"contentJson\":$CONTENIDO,\"mediaUrls\":[\"$CLAVE\"]}" "$PROF")"
 verificar "material de otro profesor rechazado" 400 "$(peticion POST /activities "{\"templateId\":\"$PLANTILLA\",\"title\":\"Ajena\",\"contentJson\":$CONTENIDO,\"mediaUrls\":[\"media/otro-profe/archivo.txt\"]}" "$PROF")"
 
+# Sprint 5: antes de publicarla, el estudiante no puede jugarla
+verificar "actividad sin publicar no se juega" 404 "$(peticion GET /activities/$ACT/play "" "$ALU")"
+VENCE=$(date -u -d "+7 days" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v+7d +%Y-%m-%dT%H:%M:%SZ)
+verificar "fecha límite en el pasado rechazada" 400 "$(peticion POST /assignments "{\"activityId\":\"$ACT\",\"classroomId\":\"$SALON\",\"dueDate\":\"2020-01-01T00:00:00Z\"}" "$PROF")"
+r=$(peticion POST /assignments "{\"activityId\":\"$ACT\",\"classroomId\":\"$SALON\",\"dueDate\":\"$VENCE\"}" "$PROF")
+verificar "profesor publica la actividad en su salón" 201 "$r"
+verificar "publicar dos veces en el mismo salón" 409 "$(peticion POST /assignments "{\"activityId\":\"$ACT\",\"classroomId\":\"$SALON\",\"dueDate\":\"$VENCE\"}" "$PROF")"
+verificar "otro profesor no publica en mi salón" 404 "$(peticion POST /assignments "{\"activityId\":\"$ACT\",\"classroomId\":\"$SALON\",\"dueDate\":\"$VENCE\"}" "$PROF2")"
+verificar "detalle del salón (profesor)" 200 "$(peticion GET /classrooms/$SALON "" "$PROF")"
+verificar "detalle del salón (alumno miembro)" 200 "$(peticion GET /classrooms/$SALON "" "$ALU")"
+r=$(peticion GET /assignments/me "" "$ALU")
+verificar "bandeja del estudiante" 200 "$r"
+echo "${r#*|}" | grep -q '"estado":"pendiente"' || { echo "  FALLA la asignación no aparece pendiente"; FALLOS=$((FALLOS + 1)); }
+verificar "asignaciones del salón (alumno)" 200 "$(peticion GET /classrooms/$SALON/assignments "" "$ALU")"
+r=$(peticion POST /auth/registro "{\"email\":\"smoke-alu2-$STAMP@test.local\",\"password\":\"$PASSWORD\",\"role\":\"ESTUDIANTE\"}")
+ALU2=$(campo "$r" access_token)
+verificar "alumno de otro salón no juega la actividad" 404 "$(peticion GET /activities/$ACT/play "" "$ALU2")"
+verificar "alumno de otro salón no ve sus asignaciones" 403 "$(peticion GET /classrooms/$SALON/assignments "" "$ALU2")"
+
 # Sprint 4: jugar la actividad y enviar el intento
 r=$(peticion GET /activities/$ACT/play "" "$ALU")
 verificar "estudiante obtiene la actividad para jugar" 200 "$r"
@@ -151,6 +170,25 @@ verificar "reintento con el mismo attemptId" 201 "$r"
 [ "$(campo "$r" id)" = "$PROGRESO" ] || { echo "  FALLA el reintento duplicó el intento"; FALLOS=$((FALLOS + 1)); }
 verificar "opción inexistente rechazada" 400 "$(peticion POST /progress "{\"activityId\":\"$ACT\",\"respuestas\":[{\"preguntaId\":\"$PREGUNTA\",\"opcionId\":9}]}" "$ALU")"
 verificar "profesor no envía intentos" 403 "$(peticion POST /progress "$ENVIO" "$PROF")"
+
+# Sprint 5: el tablero del profesor refleja la entrega
+r=$(peticion GET /classrooms/$SALON/progress "" "$PROF")
+verificar "tablero de seguimiento del salón" 200 "$r"
+echo "${r#*|}" | grep -q '"estado":"completado"' || { echo "  FALLA el tablero no muestra la entrega"; FALLOS=$((FALLOS + 1)); }
+verificar "asignaciones del salón (profesor)" 200 "$(peticion GET /classrooms/$SALON/assignments "" "$PROF")"
+verificar "estudiante no ve el tablero" 403 "$(peticion GET /classrooms/$SALON/progress "" "$ALU")"
+
+# Sprint 6: insignias (se calculan en segundo plano tras el envío)
+sleep 1
+r=$(peticion GET /students/me/badges "" "$ALU")
+verificar "perfil de insignias del estudiante" 200 "$r"
+for codigo in primer_paso constancia_diaria entrega_puntual todo_correcto; do
+  echo "${r#*|}" | grep -q "\"code\":\"$codigo\",\"name\":\"[^\"]*\",\"description\":\"[^\"]*\",\"icon\":\"[^\"]*\",\"streakCount\"" || { echo "  FALLA no se otorgó la insignia $codigo"; FALLOS=$((FALLOS + 1)); }
+done
+verificar "resumen de insignias del salón" 200 "$(peticion GET /classrooms/$SALON/badges-summary "" "$PROF")"
+ALU_ID=$(campo "$(peticion GET /auth/perfil "" "$ALU")" sub)
+verificar "detalle del alumno para su profesor" 200 "$(peticion GET /classrooms/$SALON/students/$ALU_ID "" "$PROF")"
+verificar "otro profesor no ve el detalle del alumno" 404 "$(peticion GET /classrooms/$SALON/students/$ALU_ID "" "$PROF2")"
 
 echo
 if [ "$FALLOS" -eq 0 ]; then

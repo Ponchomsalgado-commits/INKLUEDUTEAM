@@ -34,6 +34,12 @@ export class ClassroomsController {
     return this.classroomsService.listMine(user.sub, user.role);
   }
 
+  /** GET /api/v1/classrooms/:id — detalle (profesor dueño o alumno miembro). */
+  @Get(':id')
+  findOne(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.classroomsService.findOneFor(user.sub, user.role, id);
+  }
+
   /** GET /api/v1/classrooms/:id/members — profesor dueño del salón: quién está unido. */
   @Get(':id/members')
   @Roles(Role.PROFESOR)

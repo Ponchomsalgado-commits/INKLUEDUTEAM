@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ActivitiesModule } from './activities/activities.module';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { BadgesModule } from './badges/badges.module';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { ClassroomsModule } from './classrooms/classrooms.module';
@@ -25,6 +27,8 @@ import { UsersModule } from './users/users.module';
     MediaModule,
     ActivitiesModule,
     ProgressModule,
+    AssignmentsModule,
+    BadgesModule,
   ],
   controllers: [AppController],
 })
