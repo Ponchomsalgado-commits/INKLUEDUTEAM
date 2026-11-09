@@ -23,9 +23,26 @@ const contenido = (correctas = [true, false, false]) => ({
   ],
 });
 
+const clavesDe = (valor: unknown): string[] => {
+  if (Array.isArray(valor)) return valor.flatMap(clavesDe);
+  if (valor && typeof valor === 'object') {
+    return Object.entries(valor as Record<string, unknown>).flatMap(([clave, v]) => [
+      clave,
+      ...clavesDe(v),
+    ]);
+  }
+  return [];
+};
+
 describe('ActivitiesService', () => {
   const prisma = {
-    teacherActivity: { create: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), update: jest.fn() },
+    teacherActivity: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
     gameTemplate: { update: jest.fn(), upsert: jest.fn() },
   };
   const templates = { findOne: jest.fn() };
@@ -132,5 +149,51 @@ describe('ActivitiesService', () => {
       mediaUrls: ['media/profe-1/a.pdf'],
     });
     expect(media.assertOwnedKeys).toHaveBeenCalledWith('profe-1', ['media/profe-1/a.pdf']);
+  });
+
+  it('prepara la actividad para jugar sin dueño y sin exponer la clave correcta', async () => {
+    prisma.teacherActivity.findUnique.mockResolvedValue(
+      guardada({ mediaUrls: ['media/profe-1/a.pdf'] }),
+    );
+
+    const r = await service.findForPlay('act-1');
+
+    expect(prisma.teacherActivity.findUnique).toHaveBeenCalledWith({
+      where: { id: 'act-1' },
+      include: { template: true },
+    });
+    expect(clavesDe(r)).not.toContain('correcta');
+    expect(r).toMatchObject({
+      activityId: 'act-1',
+      title: 'Sumas',
+      type: 'seleccionar_objetivo',
+      skin: 'rana_nenufar',
+      contentVersion: 1,
+      totalPreguntas: 1,
+    });
+    expect(r.preguntas[0].opciones).toEqual([
+      { id: 0, texto: '0' },
+      { id: 1, texto: '1' },
+      { id: 2, texto: '2' },
+    ]);
+    expect(r.media).toEqual([{ key: 'media/profe-1/a.pdf', url: 'https://firmada/media/profe-1/a.pdf' }]);
+  });
+
+  it('expone el contenido completo para calificar', async () => {
+    prisma.teacherActivity.findUnique.mockResolvedValue(guardada());
+
+    await expect(service.findContentForGrading('act-1')).resolves.toEqual({
+      id: 'act-1',
+      contentVersion: 1,
+      contentJson: contenido(),
+      title: 'Sumas',
+    });
+  });
+
+  it('devuelve 404 al jugar o calificar una actividad inexistente', async () => {
+    prisma.teacherActivity.findUnique.mockResolvedValue(null);
+
+    await expect(service.findForPlay('act-404')).rejects.toThrow(NotFoundException);
+    await expect(service.findContentForGrading('act-404')).rejects.toThrow(NotFoundException);
   });
 });

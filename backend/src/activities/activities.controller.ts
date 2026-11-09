@@ -55,5 +55,10 @@ export class ActivitiesController {
     return this.activitiesService.update(user.sub, id, dto);
   }
 
-  // Sprint 4 agrega aquí GET :id/play (rol ESTUDIANTE): reutiliza ActivitiesService + MediaService.describe() (CLAUDE)
+  /** GET /api/v1/activities/:id/play — actividad lista para jugar (rol estudiante). (CLAUDE)*/
+  @Get(':id/play')
+  @Roles(Role.ESTUDIANTE)
+  play(@Param('id', ParseUUIDPipe) id: string) {
+    return this.activitiesService.findForPlay(id);
+  }
 }

@@ -13,6 +13,17 @@ export const MAX_CONTENT_BYTES = 100 * 1024;
 
 type ActivityWithTemplate = TeacherActivity & { template: GameTemplate };
 
+interface OpcionDeJuego {
+  texto: string;
+  correcta?: boolean;
+}
+
+interface PreguntaDeJuego {
+  id: string;
+  pregunta: string;
+  opciones: OpcionDeJuego[];
+}
+
 function campoInvalido(message: string, field: string) {
   return new BadRequestException({ error: 'VALIDATION_ERROR', message, field });
 }
@@ -25,6 +36,12 @@ export class ActivitiesService {
     private readonly media: MediaService,
   ) {}
 
+  /**
+   * Crea una actividad de profesor a partir de una plantilla y la guarda como copia propia.
+   * @param teacherId Identificador del profesor dueño de la actividad.
+   * @param dto Datos de la actividad: plantilla, título, contenido y medios opcionales.
+   * @returns La actividad creada, ya formateada para su presentación.
+   */
   async create(teacherId: string, dto: CreateActivityDto) {
     const template = await this.templates.findOne(dto.templateId);
     const title = this.cleanTitle(dto.title);
@@ -66,6 +83,41 @@ export class ActivitiesService {
 
   async findOneOf(teacherId: string, id: string) {
     return this.present(await this.getOwned(teacherId, id));
+  }
+
+  /** Versión de juego para el estudiante: sin dueño y SIN la clave `correcta`. (CLAUDE)*/
+  async findForPlay(id: string) {
+    const activity = await this.getById(id);
+    const preguntas = this.readQuestions(activity.contentJson);
+
+    return {
+      activityId: activity.id,
+      title: activity.title,
+      type: activity.template.type,
+      skin: activity.template.skin,
+      contentVersion: activity.contentVersion,
+      totalPreguntas: preguntas.length,
+      preguntas: preguntas.map((pregunta) => ({
+        id: pregunta.id,
+        pregunta: pregunta.pregunta,
+        opciones: pregunta.opciones.map((opcion, index) => ({
+          id: index, // el alumno responde por índice; el backend conserva el id original para corregir
+          texto: opcion.texto,
+        })),
+      })),
+      media: await Promise.all(activity.mediaUrls.map((key) => this.media.describe(key))),
+    };
+  }
+
+  /** Contenido completo para corregir; lo usará el módulo progress. (CLAUDE)*/
+  async findContentForGrading(id: string) {
+    const activity = await this.getById(id);
+    return {
+      id: activity.id,
+      contentVersion: activity.contentVersion,
+      contentJson: activity.contentJson,
+      title: activity.title,
+    };
   }
 
   async update(teacherId: string, id: string, dto: UpdateActivityDto) {
@@ -115,6 +167,23 @@ export class ActivitiesService {
       throw new NotFoundException('La actividad no existe.');
     }
     return activity;
+  }
+
+  /** Busca sin filtrar por dueño; 404 si la actividad no existe. (CLAUDE)*/
+  private async getById(id: string): Promise<ActivityWithTemplate> {
+    const activity = await this.prisma.teacherActivity.findUnique({
+      where: { id },
+      include: { template: true },
+    });
+    if (!activity) {
+      throw new NotFoundException('La actividad no existe.');
+    }
+    return activity;
+  }
+
+  private readQuestions(contentJson: Prisma.JsonValue): PreguntaDeJuego[] {
+    const content = contentJson as unknown as { preguntas?: PreguntaDeJuego[] };
+    return Array.isArray(content?.preguntas) ? content.preguntas : [];
   }
 
   private cleanTitle(title: string): string {
