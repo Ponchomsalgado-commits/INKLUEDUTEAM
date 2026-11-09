@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { obtenerActividad } from "../services/activityService";
 
 // Vista previa de solo lectura tal como la verá el alumno: preguntas y opciones, sin respuesta correcta ni envío.
 // Se abre desde "Editar" o "Mis actividades" con ?actividad=ID.(claude)
 
 export default function PrevisualizarActividad() {
-  const actividadId = new URLSearchParams(window.location.search).get("actividad");
+  const [params] = useSearchParams();
+  const actividadId = params.get("actividad");
   const [actividad, setActividad] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  // Sin ?actividad= no hay nada que cargar: se muestra "No encontramos esa actividad" directo
+  const [cargando, setCargando] = useState(Boolean(actividadId));
 
   useEffect(() => {
-    if (!actividadId) {
-      setCargando(false);
-      return;
-    }
+    if (!actividadId) return;
 
     obtenerActividad(actividadId)
       .then(setActividad)
@@ -22,9 +22,9 @@ export default function PrevisualizarActividad() {
   }, [actividadId]);
 
   const enlaceVolver = (
-    <a href="/actividades" className="enlace-volver">
+    <Link to="/actividades" className="enlace-volver">
       ← Volver a Mis actividades
-    </a>
+    </Link>
   );
 
   if (cargando) {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { crearSalon } from "../services/classroomService";
 import { obtenerPlantillas } from "../services/activityService";
 import { mensajeDeError } from "../components/shared/errorHandler";
@@ -63,9 +64,9 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
 
   return (
     <div className="tarjeta salones-container salones-ancho">
-      <a href="/salones" className="enlace-volver">
+      <Link to="/salones" className="enlace-volver">
         ← Volver a Mis salones
-      </a>
+      </Link>
 
       <form className="crear-salon crear-salon-horizontal seccion-salones" onSubmit={handleCrear}>
         <h2>Crear salón</h2>
@@ -133,9 +134,9 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
                   </li>
                 ))}
               </ul>
-              <a href={enlaceEditor(plantilla.id, recienCreado)} className="plantilla-usar">
+              <Link to={enlaceEditor(plantilla.id, recienCreado)} className="plantilla-usar">
                 Usar plantilla
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

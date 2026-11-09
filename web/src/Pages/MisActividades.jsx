@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { obtenerMisActividades } from "../services/activityService";
 import { ICONOS_SKIN } from "../components/shared/iconosSkin";
 
@@ -26,9 +27,9 @@ export default function MisActividades() {
       <section aria-labelledby="lista-actividades" className="seccion-salones">
         <div className="encabezado-seccion">
           <h2 id="lista-actividades">Mis actividades</h2>
-          <a href="/salones/crear#catalogo-plantillas" className="btn-crear">
+          <Link to="/salones/crear#catalogo-plantillas" className="btn-crear">
             + Nueva actividad
-          </a>
+          </Link>
         </div>
         <p className="catalogo-subtitulo">
           Tus copias editadas de las plantillas. Editarlas nunca modifica la plantilla original.
@@ -56,12 +57,12 @@ export default function MisActividades() {
               </p>
 
               <div className="actividad-acciones">
-                <a href={`/actividades/editar?actividad=${actividad.id}`} className="plantilla-usar">
+                <Link to={`/actividades/editar?actividad=${actividad.id}`} className="plantilla-usar">
                   Editar
-                </a>
-                <a href={`/actividades/previa?actividad=${actividad.id}`} className="plantilla-usar">
+                </Link>
+                <Link to={`/actividades/previa?actividad=${actividad.id}`} className="plantilla-usar">
                   Previsualizar
-                </a>
+                </Link>
               </div>
             </li>
           ))}

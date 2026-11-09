@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import TemplateEditor from "../components/TemplateEditor";
 import SubirMaterial from "../components/SubirMaterial";
 import { materialDesdeReferencia } from "../components/shared/materialUtils";
@@ -23,7 +24,7 @@ function plantillaDeActividad(plantillas, actividad) {
 }
 
 export default function CrearActividad() {
-  const params = new URLSearchParams(window.location.search);
+  const [params] = useSearchParams();
   const plantillaId = params.get("plantilla");
   const actividadId = params.get("actividad");
   const salonId = params.get("salon");
@@ -131,13 +132,13 @@ export default function CrearActividad() {
   const idActividad = esEdicion ? actividadId : actividadCreada?.id;
 
   const enlaceVolver = esEdicion ? (
-    <a href="/actividades" className="enlace-volver">
+    <Link to="/actividades" className="enlace-volver">
       ← Volver a Mis actividades
-    </a>
+    </Link>
   ) : (
-    <a href="/salones/crear" className="enlace-volver">
+    <Link to="/salones/crear" className="enlace-volver">
       ← Volver a Crear salón
-    </a>
+    </Link>
   );
 
   if (cargando) {
@@ -213,7 +214,7 @@ export default function CrearActividad() {
         {resultado && (
           <p role="status">
             Actividad "{resultado.titulo}" {resultado.mensaje}.{" "}
-            <a href="/actividades">Ver mis actividades</a>
+            <Link to="/actividades">Ver mis actividades</Link>
           </p>
         )}
 
@@ -231,9 +232,9 @@ export default function CrearActividad() {
                 : "Guardar actividad"}
         </button>
         {idActividad && (
-          <a href={`/actividades/previa?actividad=${idActividad}`} className="plantilla-usar">
+          <Link to={`/actividades/previa?actividad=${idActividad}`} className="plantilla-usar">
             Previsualizar como alumno
-          </a>
+          </Link>
         )}
       </form>
     </div>

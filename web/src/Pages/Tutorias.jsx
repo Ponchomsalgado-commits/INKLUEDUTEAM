@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { crearSalon, obtenerMisSalones, obtenerMiembros } from '../services/classroomService';
 import { mensajeDeError } from '../components/shared/errorHandler';
 
@@ -99,9 +100,9 @@ export default function Tutorias() {
       <section aria-labelledby="lista-tutorias" className="seccion-salones">
         <div className="encabezado-seccion">
           <h2 id="lista-tutorias">Tus tutorías</h2>
-          <a href="/salones/crear" className="btn-crear">
+          <Link to="/salones/crear" className="btn-crear">
             + Crear salón
-          </a>
+          </Link>
         </div>
 
         {cargandoTutorias && <p role="status">Cargando tutorías...</p>}

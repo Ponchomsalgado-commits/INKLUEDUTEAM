@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Link, Navigate, NavLink, Route, Routes } from 'react-router';
 import './App.css';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
@@ -8,122 +8,92 @@ import CrearActividad from './Pages/CrearActividad';
 import MisActividades from './Pages/MisActividades';
 import PrevisualizarActividad from './Pages/PrevisualizarActividad';
 import Tutorias from './Pages/Tutorias';
-import { logout } from './auth/authService';
-import { getAccessToken, getRefreshToken } from './auth/tokenStore';
+import { useAuth } from './auth/authContext';
+import RutaPrivada from './routes/RutaPrivada';
+import RutaPublica from './routes/RutaPublica';
+import ScrollAlNavegar from './routes/ScrollAlNavegar';
 
-// Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
-const RUTAS_SIN_SESION = ['/', '/login', '/register'];
-// Pantallas que requieren sesión; sin ella se muestra el login
-const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/actividades', '/actividades/editar', '/actividades/previa', '/tutorias'];
-
-// Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
-  const ruta = window.location.pathname.replace(/\/+$/, '').toLowerCase() || '/';
-  // Hay sesión si existe algún token; el backend sigue validando cada petición
-  const haySesion = Boolean(getAccessToken() || getRefreshToken());
+  const { haySesion, cerrarSesion } = useAuth();
 
-  // Ajusta la URL a lo que se muestra (sin recargar): con sesión, /salones; sin ella, /login
-  useEffect(() => {
-    if (haySesion && RUTAS_SIN_SESION.includes(ruta)) {
-      window.history.replaceState(null, '', '/salones');
-    } else if (!haySesion && RUTAS_CON_SESION.includes(ruta)) {
-      window.history.replaceState(null, '', '/login');
-    }
-  }, [haySesion, ruta]);
+  return (
+    <div className="app">
+      <ScrollAlNavegar />
 
-  // apiClient lanza 'auth:logout' cuando la sesión ya no se puede renovar
-  useEffect(() => {
-    const volverAlLogin = () => window.location.assign('/login');
-    window.addEventListener('auth:logout', volverAlLogin);
-    return () => window.removeEventListener('auth:logout', volverAlLogin);
-  }, []);
+      <header className="hero">
+        <div className="barra-superior">
+          <div>
+            {haySesion && (
+              <Link to="/login" onClick={cerrarSesion} className="btn-cerrar-sesion">
+                Cerrar sesión
+              </Link>
+            )}
+          </div>
 
-  // Pestaña resaltada en el menú; la raíz con sesión y Crear salón cuentan como Mis salones,
-  // y Editar actividad cuenta como Mis actividades
-  const rutaActiva =
-    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta.startsWith('/salones/crear')
-      ? '/salones'
-      : ruta.startsWith('/actividades')
-        ? '/actividades'
-        : ruta;
-  const enlaceNav = (href, texto) => (
-    <a href={href} aria-current={rutaActiva === href ? 'page' : undefined}>
-      {texto}
-    </a>
-  );
-
-return (
-  <div className="app">
-    <header className="hero">
-      <div className="barra-superior">
-        <div>
-          {haySesion && (
-            <a
-              href="/login"
-              onClick={logout}
-              className="btn-cerrar-sesion"
-            >
-              Cerrar sesión
-            </a>
-          )}
+          {/* NavLink pone aria-current="page" en la pestaña activa, también en sus subrutas:
+              /salones/crear resalta "Mis salones" y /actividades/editar resalta "Mis actividades" */}
+          <nav className="nav-tabs" aria-label="Navegación principal">
+            {haySesion ? (
+              <>
+                <NavLink to="/salones">Mis salones</NavLink>
+                <NavLink to="/actividades">Mis actividades</NavLink>
+                <NavLink to="/tutorias">Tutorías</NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login">Login</NavLink>
+                <NavLink to="/register">Registro</NavLink>
+              </>
+            )}
+          </nav>
         </div>
 
-        <nav className="nav-tabs" aria-label="Navegación principal">
-          {haySesion ? (
-            <>
-              {enlaceNav('/salones', 'Mis salones')}
-              {enlaceNav('/actividades', 'Mis actividades')}
-              {enlaceNav('/tutorias', 'Tutorías')}
-            </>
-          ) : (
-            <>
-              {enlaceNav('/login', 'Login')}
-              {enlaceNav('/register', 'Registro')}
-            </>
-          )}
-        </nav>
-      </div>
+        <h1>InkluEdu</h1>
+        <p>Aprender juntos, a tu ritmo</p>
+      </header>
 
-      <h1>InkluEdu</h1>
-      <p>Aprender juntos, a tu ritmo</p>
-    </header>
+      <main className="contenido">
+        <Routes>
+          {/* La raíz manda a Mis salones con sesión, o al login sin ella */}
+          <Route index element={<Navigate to={haySesion ? '/salones' : '/login'} replace />} />
 
-    <main className="contenido">
-      {haySesion && RUTAS_SIN_SESION.includes(ruta) ? (
-        <MisSalones />
-      ) : ruta === '/' || ruta === '/login' ? (
-        <Login />
-      ) : ruta === '/register' ? (
-        <Register />
-      ) : ruta === '/salones' ? (
-        haySesion ? <MisSalones /> : <Login />
-      ) : ruta === '/salones/crear' ? (
-        haySesion ? <CrearSalones /> : <Login />
-      ) : ruta === '/salones/crear/actividad' ? (
-        haySesion ? <CrearActividad /> : <Login />
-      ) : ruta === '/actividades' ? (
-        haySesion ? <MisActividades /> : <Login />
-      ) : ruta === '/actividades/editar' ? (
-        haySesion ? <CrearActividad /> : <Login />
-      ) : ruta === '/actividades/previa' ? (
-        haySesion ? <PrevisualizarActividad /> : <Login />
-      ) : ruta === '/tutorias' ? (
-        haySesion ? <Tutorias /> : <Login />
-      ) : ruta === '/salones/tutorias/crear' ? (
-        haySesion ? <CrearSalones /> : <Login />
-      ) : (
-        <section className="tarjeta not-found">
-          <h2>Página no encontrada</h2>
-          <p>
-            Prueba las rutas <a href="/login">/login</a> o{' '}
-            <a href="/register">/register</a>.
-          </p>
-        </section>
-      )}
-    </main>
+          {/* Solo sin sesión */}
+          <Route element={<RutaPublica />}>
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+          </Route>
 
-    <footer className="pie" />
-  </div>
-);
+          {/* Solo con sesión. Las pantallas que se repiten en dos rutas llevan key
+              para que React no reutilice su estado al pasar de una ruta a la otra */}
+          <Route element={<RutaPrivada />}>
+            <Route path="salones" element={<MisSalones />} />
+            <Route path="salones/crear" element={<CrearSalones key="salon" />} />
+            <Route path="salones/crear/actividad" element={<CrearActividad key="crear" />} />
+            <Route path="salones/tutorias/crear" element={<CrearSalones key="tutoria" />} />
+            <Route path="actividades" element={<MisActividades />} />
+            <Route path="actividades/editar" element={<CrearActividad key="editar" />} />
+            <Route path="actividades/previa" element={<PrevisualizarActividad />} />
+            <Route path="tutorias" element={<Tutorias />} />
+          </Route>
+
+          <Route
+            path="*"
+            element={
+              <section className="tarjeta not-found">
+                <h2>Página no encontrada</h2>
+                <p>
+                  Prueba las rutas <Link to="/login">/login</Link> o{' '}
+                  <Link to="/register">/register</Link>.
+                </p>
+              </section>
+            }
+          />
+        </Routes>
+      </main>
+
+      <footer className="pie" />
+    </div>
+  );
 }
+
 export default App;
