@@ -11,16 +11,20 @@ STAMP=$(date +%s)
 PASSWORD="Prueba123"
 FALLOS=0
 CUERPO=$(mktemp)
+PETICION_TMP=$(mktemp)
 ARCHIVO_TXT=$(mktemp --suffix=.txt)
 ARCHIVO_EXE=$(mktemp --suffix=.exe)
-trap 'rm -f "$CUERPO" "$ARCHIVO_TXT" "$ARCHIVO_EXE"' EXIT
+trap 'rm -f "$CUERPO" "$PETICION_TMP" "$ARCHIVO_TXT" "$ARCHIVO_EXE"' EXIT
 
 # peticion METODO RUTA [JSON] [TOKEN] -> imprime "codigo|cuerpo"
 peticion() {
   local auth=()
   [ -n "$4" ] && auth=(-H "Authorization: Bearer $4")
+  # El cuerpo va por archivo: en Windows, curl recodifica los argumentos -d y rompe los acentos
+  local datos=()
+  if [ -n "$3" ]; then printf '%s' "$3" > "$PETICION_TMP"; datos=(--data-binary "@$(ruta_nativa "$PETICION_TMP")"); fi
   curl -s -o "$CUERPO" -w "%{http_code}" -X "$1" "${auth[@]}" \
-    -H "Content-Type: application/json" ${3:+-d "$3"} "$BASE$2"
+    -H "Content-Type: application/json; charset=utf-8" "${datos[@]}" "$BASE$2"
   printf '|%s' "$(cat "$CUERPO")"
 }
 
