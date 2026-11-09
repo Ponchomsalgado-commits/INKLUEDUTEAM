@@ -46,7 +46,8 @@ El documento técnico completo (cómo funciona, por qué se decidió cada cosa y
 │   │   ├── media/           # subida de material a MinIO y URLs firmadas
 │   │   ├── common/errors/   # formato único de errores
 │   │   ├── prisma/          # PrismaService (conexión a la base)
-│   │   └── assignments/ progress/ badges/   # reservadas, sprints 5–6
+│   │   ├── progress/        # intentos de los estudiantes y su corrección
+│   │   └── assignments/ badges/   # reservadas, sprints 5–6
 │   └── Dockerfile           # etapas: development (hot reload) y production
 ├── web/
 │   ├── src/
@@ -118,7 +119,7 @@ Con celular físico: misma red Wi-Fi que la PC y el puerto 3000 permitido en el 
 
 | Qué                          | Comando                                   |
 | ---------------------------- | ----------------------------------------- |
-| Unitarias del backend (50 pruebas, 7 suites) | `cd backend && npm test`                  |
+| Unitarias del backend (61 pruebas, 8 suites) | `cd backend && npm test`                  |
 | Solo una suite (ej. actividades) | `cd backend && npm test -- activities`    |
 | Chequeo de tipos del backend | `cd backend && npx tsc --noEmit`          |
 | Prueba de humo de la API     | `bash scripts/smoke-test.sh` (con la API en marcha; ver abajo) |
@@ -161,6 +162,8 @@ Base: `/api/v1`. Las rutas con 🔒 requieren `Authorization: Bearer <access_tok
 | GET    | `/activities`         | 🔒 PROFESOR     | Mis actividades (resumen, sin preguntas)                     |
 | GET    | `/activities/:id`     | 🔒 PROFESOR dueño | Detalle con `contentJson` y `media` (URLs firmadas)        |
 | PATCH  | `/activities/:id`     | 🔒 PROFESOR dueño | Edita `title`, `contentJson` y/o `mediaUrls`; sube `contentVersion` si cambia el contenido |
+| GET    | `/activities/:id/play` | 🔒 ESTUDIANTE  | Actividad lista para jugar: preguntas y opciones por índice, **sin** la respuesta correcta |
+| POST   | `/progress`           | 🔒 ESTUDIANTE   | `{ activityId, respuestas: [{ preguntaId, opcionId }], attemptId? }` → `{ id, score, total, detalle }`. Repetir el mismo `attemptId` devuelve el intento ya guardado |
 | POST   | `/media/upload`      | 🔒 PROFESOR     | Multipart con el campo `file` → `{ key, name, url, size, … }` |
 | GET    | `/media/url?key=`     | 🔒 PROFESOR dueño | URL firmada nueva de un archivo propio                     |
 
@@ -182,7 +185,8 @@ Reglas de actividades y material:
 - **Sesión web al recargar:** el access token vive en memoria y se pierde al recargar; falta usar el refresh token guardado para restaurar la sesión, y redirigir después del login.
 - **Publicar actividades (`POST /assignments`):** es del Sprint 5. Hasta entonces, "Guardar y publicar" en la web guarda la actividad pero no la publica.
 - **Tutoría individual:** todavía no se limita a un solo estudiante (regla del Sprint 7).
-- **Plantillas del móvil:** la app todavía no renderiza `seleccionar_objetivo` ni lee `contentJson`; eso es del Sprint 4.
+- **Minijuego móvil con datos reales:** la app ya renderiza `seleccionar_objetivo` con skins y envía el intento a `POST /progress` (con guardado local y reenvío al volver la conexión), pero la pantalla todavía usa preguntas de prueba; falta cargarlas desde `GET /activities/:id/play`.
+- **Quién puede jugar una actividad:** `/play` y `/progress` aceptan a cualquier estudiante con el ID de la actividad. Al llegar las asignaciones (Sprint 5) hay que limitarlo a los alumnos del salón asignado.
 - **HTTPS:** al tenerlo, quitar `usesCleartextTraffic` del AndroidManifest y `NSAllowsLocalNetworking` de iOS.
 
 ## Trabajo en equipo

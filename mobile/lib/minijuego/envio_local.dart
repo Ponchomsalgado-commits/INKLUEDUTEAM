@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -17,11 +19,15 @@ class EnvioPendiente {
   final String activityId;
   final List<RespuestaEnvio> respuestas;
 
+  /// UUID del intento: si un reintento llega dos veces, el backend no lo duplica.
+  final String? attemptId;
+
   final bool rechazado;
 
   const EnvioPendiente({
     required this.activityId,
     required this.respuestas,
+    this.attemptId,
     this.rechazado = false,
   });
 }
@@ -40,6 +46,7 @@ class EnvioLocal {
       await caja.put(activityId, {
         'activityId': activityId,
         'respuestas': respuestas.map((r) => r.toJson()).toList(),
+        'attemptId': _uuidV4(),
         'rechazado': false,
       });
     } catch (e) {
@@ -103,7 +110,19 @@ class EnvioLocal {
                 r['opcionId'] as int,
               ))
           .toList(),
+      attemptId: datos['attemptId'] as String?,
       rechazado: datos['rechazado'] == true,
     );
+  }
+
+  /// UUID v4 sin dependencias extra.
+  static String _uuidV4() {
+    final r = Random.secure();
+    final b = List<int>.generate(16, (_) => r.nextInt(256));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    final h = b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+    return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-'
+        '${h.substring(16, 20)}-${h.substring(20)}';
   }
 }

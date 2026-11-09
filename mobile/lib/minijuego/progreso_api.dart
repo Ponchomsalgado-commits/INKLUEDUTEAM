@@ -73,6 +73,7 @@ class ProgresoApi {
       final resp = await _dio.post(_ruta, data: {
         'activityId': activityId,
         'respuestas': pendiente.respuestas.map((r) => r.toJson()).toList(),
+        if (pendiente.attemptId != null) 'attemptId': pendiente.attemptId,
       });
 
       await EnvioLocal.eliminar(activityId);

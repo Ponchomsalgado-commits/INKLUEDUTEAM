@@ -91,6 +91,7 @@ describe('ProgressService', () => {
     };
 
     await expect(service.submit('alumno-1', dto)).resolves.toEqual({
+      id: 'prog-1',
       score: 3,
       total: 3,
       detalle: [
@@ -156,6 +157,7 @@ describe('ProgressService', () => {
     };
 
     await expect(service.submit('alumno-1', dto)).resolves.toEqual({
+      id: 'prog-1',
       score: 1,
       total: 3,
       detalle: [{ preguntaId: 'p-2', opcionId: 0, correcta: true }],
@@ -188,6 +190,7 @@ describe('ProgressService', () => {
     };
 
     await expect(service.submit('alumno-1', dto)).resolves.toEqual({
+      id: 'prog-ya-existente',
       score: 2,
       total: 3,
       detalle: [

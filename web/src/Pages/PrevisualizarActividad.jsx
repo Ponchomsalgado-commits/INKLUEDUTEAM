@@ -7,13 +7,11 @@ import { obtenerActividad } from "../services/activityService";
 export default function PrevisualizarActividad() {
   const actividadId = new URLSearchParams(window.location.search).get("actividad");
   const [actividad, setActividad] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  // Sin ID no hay nada que cargar: se arranca ya en "no cargando" en vez de cambiarlo dentro del efecto.
+  const [cargando, setCargando] = useState(Boolean(actividadId));
 
   useEffect(() => {
-    if (!actividadId) {
-      setCargando(false);
-      return;
-    }
+    if (!actividadId) return;
 
     obtenerActividad(actividadId)
       .then(setActividad)

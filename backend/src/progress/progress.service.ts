@@ -22,6 +22,7 @@ interface DetalleRespuesta {
 }
 
 type ProgressConRespuestas = {
+  id: string;
   score: number;
   totalPreguntas: number;
   answers: DetalleRespuesta[];
@@ -163,6 +164,7 @@ export class ProgressService {
 
   private present(progress: ProgressConRespuestas) {
     return {
+      id: progress.id,
       score: progress.score,
       total: progress.totalPreguntas,
       detalle: progress.answers.map(({ preguntaId, opcionId, correcta }) => ({
