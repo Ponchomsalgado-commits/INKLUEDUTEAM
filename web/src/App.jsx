@@ -1,4 +1,4 @@
-import { Link, Navigate, NavLink, Route, Routes } from 'react-router';
+import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router';
 import './App.css';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
@@ -8,6 +8,7 @@ import CrearActividad from './Pages/CrearActividad';
 import MisActividades from './Pages/MisActividades';
 import PrevisualizarActividad from './Pages/PrevisualizarActividad';
 import Tutorias from './Pages/Tutorias';
+import Inicio from './Pages/inicio';
 import { useAuth } from './auth/authContext';
 import RutaPrivada from './routes/RutaPrivada';
 import RutaPublica from './routes/RutaPublica';
@@ -15,6 +16,8 @@ import ScrollAlNavegar from './routes/ScrollAlNavegar';
 
 function App() {
   const { haySesion, cerrarSesion } = useAuth();
+  const { pathname } = useLocation();
+  const enInicio = pathname === '/' || pathname === '/inicio';
 
   return (
     <div className="app">
@@ -24,41 +27,46 @@ function App() {
         <div className="barra-superior">
           <div>
             {haySesion && (
-              <Link to="/login" onClick={cerrarSesion} className="btn-cerrar-sesion">
+              <Link to="/inicio" onClick={cerrarSesion} className="btn-cerrar-sesion">
                 Cerrar sesión
               </Link>
             )}
           </div>
 
-          {/* NavLink pone aria-current="page" en la pestaña activa, también en sus subrutas:
-              /salones/crear resalta "Mis salones" y /actividades/editar resalta "Mis actividades" */}
-          <nav className="nav-tabs" aria-label="Navegación principal">
-            {haySesion ? (
-              <>
-                <NavLink to="/salones">Mis salones</NavLink>
-                <NavLink to="/actividades">Mis actividades</NavLink>
-                <NavLink to="/tutorias">Tutorías</NavLink>
-              </>
-            ) : (
-              <>
-                <NavLink to="/login">Login</NavLink>
-                <NavLink to="/register">Registro</NavLink>
-              </>
-            )}
-          </nav>
+        
+          {haySesion ? (
+            <nav className="nav-tabs" aria-label="Navegación principal">
+              <NavLink to="/salones">Mis salones</NavLink>
+              <NavLink to="/actividades">Mis actividades</NavLink>
+              <NavLink to="/tutorias">Tutorías</NavLink>
+            </nav>
+          ) : (
+            // Sin sesión, los botones Unirse/Registrarse solo aparecen en el inicio
+            enInicio && (
+              <nav className="inicio-acciones" aria-label="Acceso">
+                <Link to="/login" className="btn-inicio btn-inicio-secundario">
+                  Unirse
+                </Link>
+                <Link to="/register" className="btn-inicio btn-inicio-principal">
+                  Registrarse
+                </Link>
+              </nav>
+            )
+          )}
         </div>
 
         <h1>InkluEdu</h1>
-        <p>Aprender juntos, a tu ritmo</p>
+        
       </header>
 
       <main className="contenido">
         <Routes>
-          {/* La raíz manda a Mis salones con sesión, o al login sin ella */}
-          <Route index element={<Navigate to={haySesion ? '/salones' : '/login'} replace />} />
+          
+          <Route index element={haySesion ? <Navigate to="/salones" replace /> : <Inicio />} />
 
           {/* Solo sin sesión */}
           <Route element={<RutaPublica />}>
+           <Route path="inicio" element={<Inicio />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
           </Route>

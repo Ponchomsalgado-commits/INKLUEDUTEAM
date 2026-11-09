@@ -8,7 +8,7 @@ export default function RutaPrivada() {
   const location = useLocation();
 
   if (!haySesion) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/inicio" replace state={{ from: location }} />;
   }
   return <Outlet />;
 }

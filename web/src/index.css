@@ -14,7 +14,7 @@
   --fuente-titulo: 'Fredoka', 'Nunito', sans-serif;
 
   font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--texto);
+  color: var(--texto-suave);
   background: var(--fondo-1);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -27,8 +27,8 @@
 }
 
 body {
-  min-width: 320px;
-  min-height: 100vh;
+  min-width: 420px;
+  min-height: 10vh;
   margin: 0;
   padding: 0;
   background: var(--fondo-1);
