@@ -2,35 +2,37 @@ import 'package:flutter/material.dart';
 
 import '../models/pregunta_data.dart';
 import '../widgets/minijuego_factory.dart';
+import 'envio_local.dart';
+import 'progreso_api.dart';
 import 'progreso_local.dart';
 
 class Pregunta {
+  final String id;
   final String enunciado;
   final List<String> opciones;
-  final int correcta;
 
   const Pregunta({
+    required this.id,
     required this.enunciado,
     required this.opciones,
-    required this.correcta,
   });
 }
 
 const List<Pregunta> _preguntasDePrueba = [
   Pregunta(
+    id: 'p1',
     enunciado: '¿Cuál es la capital de Colombia?',
     opciones: ['Medellín', 'Bogotá', 'Cali', 'Cartagena'],
-    correcta: 1,
   ),
   Pregunta(
+    id: 'p2',
     enunciado: '¿Cuánto es 7 x 8?',
     opciones: ['54', '56', '58', '64'],
-    correcta: 1,
   ),
   Pregunta(
+    id: 'p3',
     enunciado: '¿Qué planeta es el más cercano al Sol?',
     opciones: ['Venus', 'Marte', 'Mercurio', 'Júpiter'],
-    correcta: 2,
   ),
 ];
 
@@ -38,9 +40,7 @@ class MinijuegoScreen extends StatefulWidget {
   final String id;
   final String titulo;
   final List<Pregunta> preguntas;
-
   final String type;
-
   final String? skin;
 
   const MinijuegoScreen({
@@ -60,18 +60,12 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
   int _actual = 0;
   bool _terminado = false;
   bool _cargado = false;
+  bool _enviando = false;
+  ResultadoEnvio? _envio;
   late List<int?> _respuestas =
       List<int?>.filled(widget.preguntas.length, null);
 
   int get _total => widget.preguntas.length;
-
-  int get _aciertos {
-    var n = 0;
-    for (var i = 0; i < _total; i++) {
-      if (_respuestas[i] == widget.preguntas[i].correcta) n++;
-    }
-    return n;
-  }
 
   @override
   void initState() {
@@ -118,14 +112,37 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
       ProgresoLocal.guardar(widget.id, _actual, _respuestas);
     } else {
       setState(() => _terminado = true);
-      ProgresoLocal.borrar(widget.id);
+      _finalizarYEnviar();
     }
+  }
+  Future<void> _finalizarYEnviar() async {
+    if (_respuestas.contains(null)) return; // no debería pasar
+
+    final respuestas = [
+      for (var i = 0; i < _total; i++)
+        RespuestaEnvio(widget.preguntas[i].id, _respuestas[i]!),
+    ];
+
+    await EnvioLocal.guardar(widget.id, respuestas);
+    await ProgresoLocal.borrar(widget.id);
+    await _enviar();
+  }
+
+  Future<void> _enviar() async {
+    setState(() => _enviando = true);
+    final resultado = await ProgresoApi.instancia.enviar(widget.id);
+    if (!mounted) return;
+    setState(() {
+      _envio = resultado;
+      _enviando = false;
+    });
   }
 
   void _reiniciar() {
     setState(() {
       _actual = 0;
       _terminado = false;
+      _envio = null;
       _respuestas = List<int?>.filled(_total, null);
     });
     ProgresoLocal.borrar(widget.id);
@@ -175,14 +192,13 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
           borderRadius: BorderRadius.circular(4),
         ),
         const SizedBox(height: 24),
-
         SizedBox(
           height: 380,
           child: construirMinijuego(
             type: widget.type,
             skin: widget.skin,
             pregunta: PreguntaData(
-              id: '$_actual', // provisional (aún no hay id real de backend)
+              id: p.id,
               texto: p.enunciado,
               opciones: [for (final o in p.opciones) OpcionData(texto: o)],
             ),
@@ -214,6 +230,80 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
   }
 
   Widget _resultado() {
+    final r = _envio;
+
+    if (_enviando || r == null) {
+      return _panel(
+        icono: const CircularProgressIndicator(),
+        titulo: 'Enviando tus respuestas…',
+        botones: const [],
+      );
+    }
+
+    switch (r.estado) {
+      case EstadoEnvio.exito:
+        return _panel(
+          icono: const Icon(Icons.emoji_events, size: 72),
+          titulo: '¡Terminaste!',
+          detalle: (r.score != null && r.total != null)
+              ? '${r.score} de ${r.total} respuestas correctas'
+              : 'Tus respuestas se enviaron.',
+          botones: [
+            ElevatedButton(
+              onPressed: _reiniciar,
+              child: const Text('Intentar de nuevo'),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Salir'),
+            ),
+          ],
+        );
+
+      case EstadoEnvio.pendiente:
+      case EstadoEnvio.enCurso:
+        return _panel(
+          icono: const Icon(Icons.cloud_off, size: 72),
+          titulo: 'Guardamos tus respuestas',
+          detalle: 'Se enviarán solas cuando tengas conexión. '
+              'No necesitas hacer nada.',
+          botones: [
+            ElevatedButton(
+              onPressed: _enviar,
+              child: const Text('Reintentar ahora'),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Salir'),
+            ),
+          ],
+        );
+
+      case EstadoEnvio.rechazado:
+        return _panel(
+          icono: const Icon(Icons.error_outline, size: 72),
+          titulo: 'No pudimos enviar tus respuestas',
+          detalle: r.mensaje,
+          botones: [
+            ElevatedButton(
+              onPressed: _enviar,
+              child: const Text('Reintentar'),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Salir'),
+            ),
+          ],
+        );
+    }
+  }
+
+  Widget _panel({
+    required Widget icono,
+    required String titulo,
+    String? detalle,
+    required List<Widget> botones,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -221,29 +311,26 @@ class _MinijuegoScreenState extends State<MinijuegoScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.emoji_events, size: 72),
+            Center(child: icono),
             const SizedBox(height: 16),
-            const Text(
-              '¡Terminaste!',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             Text(
-              '$_aciertos de $_total respuestas correctas',
+              titulo,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _reiniciar,
-              child: const Text('Intentar de nuevo'),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Salir'),
-            ),
+            if (detalle != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                detalle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18),
+              ),
+            ],
+            if (botones.isNotEmpty) const SizedBox(height: 32),
+            for (var i = 0; i < botones.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              botones[i],
+            ],
           ],
         ),
       ),

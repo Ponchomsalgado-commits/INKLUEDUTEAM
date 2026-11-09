@@ -3,6 +3,7 @@ import 'api_client.dart';
 import 'auth/auth_gate.dart';
 import 'auth/login_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'minijuego/progreso_api.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -15,6 +16,8 @@ Future<void> main() async{
       (ruta) => false,
     );
   };
+
+  ProgresoApi.iniciar;
 
   runApp(MaterialApp(
     navigatorKey: navigatorKey,
