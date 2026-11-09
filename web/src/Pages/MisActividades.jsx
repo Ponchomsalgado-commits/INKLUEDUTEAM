@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { obtenerMisActividades } from "../services/activityService";
 import { ICONOS_SKIN } from "../components/shared/iconosSkin";
+import PublicarActividad from "../components/PublicarActividad";
 
 // T3104: Pantalla "Mis actividades": copias propias de plantillas, con opción de editar o previsualizar como alumno.
 // Crear una actividad nueva empieza en el catálogo de plantillas (/salones/crear).
@@ -12,6 +13,8 @@ function formatearFecha(fecha) {
 export default function MisActividades() {
   const [actividades, setActividades] = useState([]);
   const [cargando, setCargando] = useState(true);
+  // Actividad que se está publicando en un salón o tutoría (abre la ventana de publicar)
+  const [aPublicar, setAPublicar] = useState(null);
 
   useEffect(() => {
     // Si la lista no se puede cargar se muestra como vacía en vez del error
@@ -62,11 +65,16 @@ export default function MisActividades() {
                 <a href={`/actividades/previa?actividad=${actividad.id}`} className="plantilla-usar">
                   Previsualizar
                 </a>
+                <button type="button" className="btn-publicar" onClick={() => setAPublicar(actividad)}>
+                  Publicar
+                </button>
               </div>
             </li>
           ))}
         </ul>
       </section>
+
+      {aPublicar && <PublicarActividad actividad={aPublicar} onCerrar={() => setAPublicar(null)} />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { crearSalon, obtenerMisSalones, obtenerMiembros } from '../services/classroomService';
 import { mensajeDeError } from '../components/shared/errorHandler';
+import { rutaDetalleSalon } from '../components/shared/rutasSalon';
 
 // Tutorías individuales: crear tutoría (salón INDIVIDUAL), ver su código de 5 caracteres
 // y ver el perfil del UsuarioA unido.
@@ -116,7 +117,11 @@ export default function Tutorias() {
             return (
               <li key={tutoria.id} className="salon-card">
                 <div className="salon-info">
-                  <strong>{tutoria.name}</strong>
+                  <strong>
+                    <a href={rutaDetalleSalon(tutoria.id, { desde: 'tutorias' })} className="salon-nombre-enlace">
+                      {tutoria.name}
+                    </a>
+                  </strong>
                   <span className="salon-tipo">
                     {unidos == null
                       ? 'Individual'
@@ -132,6 +137,12 @@ export default function Tutorias() {
                   {botonCopiar(tutoria.joinCode)}
                 </div>
 
+                <a
+                  href={rutaDetalleSalon(tutoria.id, { desde: 'tutorias' })}
+                  className="plantilla-usar abrir-salon"
+                >
+                  Abrir tutoría
+                </a>{' '}
                 <button
                   type="button"
                   className="ver-miembros"

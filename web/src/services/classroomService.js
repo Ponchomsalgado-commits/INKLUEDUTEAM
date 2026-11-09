@@ -16,6 +16,12 @@ export async function obtenerMisSalones() {
   return response.data;
 }
 
+// GET /classrooms/:id -> detalle del salón: { id, name, type, joinCode, teacher, memberCount, assignmentCount }.
+export async function obtenerSalon(classroomId) {
+  const response = await apiClient.get(`/classrooms/${classroomId}`);
+  return response.data;
+}
+
 // GET /classrooms/:id/members -> alumnos unidos al salón (solo el profesor dueño).
 // Respuesta: array de { joinedAt, student: { id, email, role, createdAt } }.
 export async function obtenerMiembros(classroomId) {

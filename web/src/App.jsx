@@ -8,13 +8,15 @@ import CrearActividad from './Pages/CrearActividad';
 import MisActividades from './Pages/MisActividades';
 import PrevisualizarActividad from './Pages/PrevisualizarActividad';
 import Tutorias from './Pages/Tutorias';
+import DetalleSalon from './Pages/DetalleSalon';
+import DetalleAlumno from './Pages/DetalleAlumno';
 import { logout } from './auth/authService';
 import { getAccessToken, getRefreshToken } from './auth/tokenStore';
 
 // Pantallas que solo tienen sentido sin sesión; con sesión se muestra Mis salones
 const RUTAS_SIN_SESION = ['/', '/login', '/register'];
 // Pantallas que requieren sesión; sin ella se muestra el login
-const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/actividades', '/actividades/editar', '/actividades/previa', '/tutorias'];
+const RUTAS_CON_SESION = ['/salones', '/salones/crear', '/salones/crear/actividad', '/actividades', '/actividades/editar', '/actividades/previa', '/tutorias', '/salones/detalle', '/salones/alumno'];
 
 // Enrutado mínimo por URL. Cuando haya más pantallas conviene pasar a react-router.
 function App() {
@@ -38,10 +40,13 @@ function App() {
     return () => window.removeEventListener('auth:logout', volverAlLogin);
   }, []);
 
-  // Pestaña resaltada en el menú; la raíz con sesión y Crear salón cuentan como Mis salones,
-  // y Editar actividad cuenta como Mis actividades
+  // Pestaña resaltada en el menú; la raíz con sesión, Crear salón y el detalle de un salón cuentan
+  // como Mis salones (o Tutorías si se llegó desde ahí), y Editar actividad cuenta como Mis actividades
+  const desdeTutorias = new URLSearchParams(window.location.search).get('desde') === 'tutorias';
   const rutaActiva =
-    (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta.startsWith('/salones/crear')
+    ruta.startsWith('/salones/') && desdeTutorias
+      ? '/tutorias'
+      : (haySesion && RUTAS_SIN_SESION.includes(ruta)) || ruta.startsWith('/salones/')
       ? '/salones'
       : ruta.startsWith('/actividades')
         ? '/actividades'
@@ -109,6 +114,10 @@ return (
         haySesion ? <PrevisualizarActividad /> : <Login />
       ) : ruta === '/tutorias' ? (
         haySesion ? <Tutorias /> : <Login />
+      ) : ruta === '/salones/detalle' ? (
+        haySesion ? <DetalleSalon /> : <Login />
+      ) : ruta === '/salones/alumno' ? (
+        haySesion ? <DetalleAlumno /> : <Login />
       ) : ruta === '/salones/tutorias/crear' ? (
         haySesion ? <CrearSalones /> : <Login />
       ) : (

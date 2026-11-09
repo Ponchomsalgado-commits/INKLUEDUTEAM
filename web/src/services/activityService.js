@@ -49,13 +49,4 @@ export async function editarActividad(id, { title, content, mediaUrls = [] }) {
   return response.data;
 }
 
-// POST /assignments -> publica una actividad en un salón o tutoría con fecha límite.
-// Pendiente en backend: es del Sprint 5; hasta entonces responde 404 y la pantalla lo muestra como no disponible.
-export async function publicarActividad({ activityId, classroomId, dueDate }) {
-  const response = await apiClient.post("/assignments", {
-    activityId,
-    classroomId,
-    dueDate,
-  });
-  return response.data;
-}
+// Publicar una actividad en un salón (POST /assignments) vive en assignmentService.js.

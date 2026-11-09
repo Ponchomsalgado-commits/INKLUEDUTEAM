@@ -47,7 +47,8 @@ El documento técnico completo (cómo funciona, por qué se decidió cada cosa y
 │   │   ├── common/errors/   # formato único de errores
 │   │   ├── prisma/          # PrismaService (conexión a la base)
 │   │   ├── progress/        # intentos de los estudiantes y su corrección
-│   │   └── assignments/ badges/   # reservadas, sprints 5–6
+│   │   ├── assignments/     # publicación de actividades en salones y tablero de seguimiento
+│   │   └── badges/          # catálogo y motor de reglas de insignias
 │   └── Dockerfile           # etapas: development (hot reload) y production
 ├── web/
 │   ├── src/
@@ -119,7 +120,7 @@ Con celular físico: misma red Wi-Fi que la PC y el puerto 3000 permitido en el 
 
 | Qué                          | Comando                                   |
 | ---------------------------- | ----------------------------------------- |
-| Unitarias del backend (61 pruebas, 8 suites) | `cd backend && npm test`                  |
+| Unitarias del backend (85 pruebas, 10 suites) | `cd backend && npm test`                  |
 | Solo una suite (ej. actividades) | `cd backend && npm test -- activities`    |
 | Chequeo de tipos del backend | `cd backend && npx tsc --noEmit`          |
 | Prueba de humo de la API     | `bash scripts/smoke-test.sh` (con la API en marcha; ver abajo) |
@@ -162,8 +163,17 @@ Base: `/api/v1`. Las rutas con 🔒 requieren `Authorization: Bearer <access_tok
 | GET    | `/activities`         | 🔒 PROFESOR     | Mis actividades (resumen, sin preguntas)                     |
 | GET    | `/activities/:id`     | 🔒 PROFESOR dueño | Detalle con `contentJson` y `media` (URLs firmadas)        |
 | PATCH  | `/activities/:id`     | 🔒 PROFESOR dueño | Edita `title`, `contentJson` y/o `mediaUrls`; sube `contentVersion` si cambia el contenido |
-| GET    | `/activities/:id/play` | 🔒 ESTUDIANTE  | Actividad lista para jugar: preguntas y opciones por índice, **sin** la respuesta correcta |
-| POST   | `/progress`           | 🔒 ESTUDIANTE   | `{ activityId, respuestas: [{ preguntaId, opcionId }], attemptId? }` → `{ id, score, total, detalle }`. Repetir el mismo `attemptId` devuelve el intento ya guardado |
+| GET    | `/activities/:id/play` | 🔒 ESTUDIANTE  | Actividad lista para jugar: preguntas y opciones por índice, **sin** la respuesta correcta, y `media` con URLs firmadas. Solo si está asignada a uno de sus salones (si no, `404`) |
+| POST   | `/progress`           | 🔒 ESTUDIANTE   | `{ activityId, respuestas: [{ preguntaId, opcionId }], attemptId? }` → `{ id, score, total, detalle }`. Repetir el mismo `attemptId` devuelve el intento ya guardado. Dispara el cálculo de insignias en segundo plano |
+| GET    | `/classrooms/:id`     | 🔒 dueño o miembro | Detalle del salón: `{ …, teacher, memberCount, assignmentCount }` |
+| POST   | `/assignments`        | 🔒 PROFESOR     | `{ activityId, classroomId, dueDate }` publica una actividad propia en un salón propio. `400` fecha pasada, `409` ya publicada ahí |
+| DELETE | `/assignments/:id`    | 🔒 PROFESOR dueño | Retira la publicación                                      |
+| GET    | `/assignments/me`     | 🔒 ESTUDIANTE   | Bandeja: asignaciones de sus salones por fecha límite, con `estado` (`pendiente`, `completado`, `atrasado`) y `ultimoIntento`. Filtro opcional `?classroomId=` |
+| GET    | `/classrooms/:id/assignments` | 🔒 dueño o miembro | Profesor: publicaciones con `entregados`/`totalAlumnos`. Alumno: su bandeja de ese salón |
+| GET    | `/classrooms/:id/progress` | 🔒 PROFESOR dueño | Tablero: estado, score/total y fecha de cada alumno en cada asignación |
+| GET    | `/students/me/badges` | 🔒 ESTUDIANTE   | `{ rachaActual, actividadesCompletadas, badges, porDescubrir }` |
+| GET    | `/classrooms/:id/badges-summary` | 🔒 PROFESOR dueño | Insignias de cada alumno del salón (sin rankings) |
+| GET    | `/classrooms/:id/students/:studentId` | 🔒 PROFESOR dueño | Detalle de un alumno: insignias, intentos y `preguntasFalladas` |
 | POST   | `/media/upload`      | 🔒 PROFESOR     | Multipart con el campo `file` → `{ key, name, url, size, … }` |
 | GET    | `/media/url?key=`     | 🔒 PROFESOR dueño | URL firmada nueva de un archivo propio                     |
 
@@ -183,10 +193,9 @@ Reglas de actividades y material:
 
 - **Registro de profesores abierto:** la API acepta `role: "PROFESOR"` de cualquier cliente. Falta decidir cómo se dan de alta los profesores (código de invitación, alta por administrador…).
 - **Sesión web al recargar:** el access token vive en memoria y se pierde al recargar; falta usar el refresh token guardado para restaurar la sesión, y redirigir después del login.
-- **Publicar actividades (`POST /assignments`):** es del Sprint 5. Hasta entonces, "Guardar y publicar" en la web guarda la actividad pero no la publica.
-- **Tutoría individual:** todavía no se limita a un solo estudiante (regla del Sprint 7).
-- **Minijuego móvil con datos reales:** la app ya renderiza `seleccionar_objetivo` con skins y envía el intento a `POST /progress` (con guardado local y reenvío al volver la conexión), pero la pantalla todavía usa preguntas de prueba; falta cargarlas desde `GET /activities/:id/play`.
-- **Quién puede jugar una actividad:** `/play` y `/progress` aceptan a cualquier estudiante con el ID de la actividad. Al llegar las asignaciones (Sprint 5) hay que limitarlo a los alumnos del salón asignado.
+- **Tutoría individual:** todavía no se limita a un solo estudiante ni se puede regenerar el código (Sprint 7).
+- **Insignias:** las reglas viven en `backend/src/badges/badge-rules.ts` (agregar una regla = agregarla a `BADGE_RULES`). "El mismo día" y las rachas usan la zona horaria `APP_TIMEZONE` (por defecto `America/Mexico_City`).
+- **Datos de demostración:** `bash scripts/demo-seed.sh` crea un profesor, dos alumnos, un salón, una tutoría y actividades publicadas (contraseña `Demo1234`). Para empezar de cero: `scripts/demo-reset.sql`.
 - **HTTPS:** al tenerlo, quitar `usesCleartextTraffic` del AndroidManifest y `NSAllowsLocalNetworking` de iOS.
 
 ## Trabajo en equipo

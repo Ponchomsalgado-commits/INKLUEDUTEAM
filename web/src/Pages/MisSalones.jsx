@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { obtenerMisSalones, obtenerMiembros } from "../services/classroomService";
+import { rutaDetalleSalon, tipoSalonLegible } from "../components/shared/rutasSalon";
 
 // T2101: Pantalla "Mis salones": ver código y lista de usuarios unidos.
 // Crear un salón se hace en su propia pantalla (/salones/crear).
+// "Abrir salón" lleva al detalle (/salones/detalle): actividades, seguimiento e insignias.
 
 export default function MisSalones() {
   const [salones, setSalones] = useState([]);
@@ -76,9 +78,13 @@ export default function MisSalones() {
           {salones.map((salon) => (
             <li key={salon.id} className="salon-card">
               <div className="salon-info">
-                <strong>{salon.name}</strong>
-                <span className="salon-tipo">
-                  {salon.type === "GRUPO" ? "Grupo" : "Individual"}
+                <strong>
+                  <a href={rutaDetalleSalon(salon.id)} className="salon-nombre-enlace">
+                    {salon.name}
+                  </a>
+                </strong>
+                <span className={`salon-tipo ${salon.type === "INDIVIDUAL" ? "tipo-tutoria" : "tipo-grupo"}`}>
+                  {tipoSalonLegible(salon.type)}
                 </span>
               </div>
 
@@ -90,6 +96,9 @@ export default function MisSalones() {
                 </button>
               </div>
 
+              <a href={rutaDetalleSalon(salon.id)} className="plantilla-usar abrir-salon">
+                Abrir salón
+              </a>{" "}
               <button
                 type="button"
                 className="ver-miembros"

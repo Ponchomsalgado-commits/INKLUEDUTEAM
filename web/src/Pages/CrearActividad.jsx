@@ -8,13 +8,14 @@ import {
   obtenerActividad,
   crearActividad,
   editarActividad,
-  publicarActividad,
 } from "../services/activityService";
 import { validarPreguntas } from "../components/shared/validarPreguntas";
 import { mensajeDeError } from "../components/shared/errorHandler";
+import PublicarActividad from "../components/PublicarActividad";
 
-// Pantalla para editar una copia de la plantilla elegida en /salones/crear y,
-// al guardar, publicarla en el salón recién creado..
+// Pantalla para editar una copia de la plantilla elegida en /salones/crear.
+// "Guardar" solo guarda; "Guardar y publicar" guarda y abre la ventana para elegir
+// salón o tutoría y fecha límite (si se llegó con ?salon=ID, ese salón viene preseleccionado).
 // Con ?actividad=ID (desde "Mis actividades") edita esa actividad propia en vez de crear otra.
 
 // Plantilla de origen de una actividad: el catálogo trae el schemaJson que necesita el editor
@@ -35,12 +36,13 @@ export default function CrearActividad() {
   const [titulo, setTitulo] = useState("");
   const [preguntas, setPreguntas] = useState([]);
   const [materiales, setMateriales] = useState([]);
-  const [fechaLimite, setFechaLimite] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState(null);
-  // Si se creó la actividad pero falló la publicación, reintentar no la duplica
+  // Una vez creada, volver a guardar o publicar no la duplica
   const [actividadCreada, setActividadCreada] = useState(null);
+  // Actividad guardada que se está publicando (abre la ventana de publicar)
+  const [aPublicar, setAPublicar] = useState(null);
 
   useEffect(() => {
     const cargar = async () => {
@@ -79,6 +81,8 @@ export default function CrearActividad() {
 
   const handleGuardar = async (e) => {
     e.preventDefault();
+    // Qué botón envió el formulario: "Guardar" o "Guardar y publicar"
+    const publicar = e.nativeEvent?.submitter?.value === "publicar";
     setError("");
     setResultado(null);
 
@@ -105,22 +109,16 @@ export default function CrearActividad() {
 
     setGuardando(true);
     try {
+      let id = actividadId;
       if (esEdicion) {
         await editarActividad(actividadId, datos);
-        setResultado({ titulo: datos.title, mensaje: "guardada" });
-        return;
+      } else {
+        const actividad = actividadCreada ?? (await crearActividad({ templateId: plantilla.id, ...datos }));
+        setActividadCreada(actividad);
+        id = actividad.id;
       }
-
-      const actividad = actividadCreada ?? (await crearActividad({ templateId: plantilla.id, ...datos }));
-      setActividadCreada(actividad);
-      if (salonId) {
-        await publicarActividad({
-          activityId: actividad.id,
-          classroomId: salonId,
-          dueDate: new Date(fechaLimite).toISOString(),
-        });
-      }
-      setResultado({ titulo: datos.title, mensaje: salonId ? "publicada en el salón" : "guardada" });
+      setResultado({ titulo: datos.title, mensaje: "guardada" });
+      if (publicar) setAPublicar({ id, title: datos.title });
     } catch (err) {
       setError(mensajeDeError(err, "No se pudo guardar la actividad"));
     } finally {
@@ -173,8 +171,8 @@ export default function CrearActividad() {
           {esEdicion
             ? "Los cambios se guardan en tu copia; la plantilla original no se modifica."
             : salonId
-              ? `Al guardar se publicará en el salón "${salonNombre ?? salonId}".`
-              : "Al guardar quedará en tus actividades. Crea un salón primero para publicarla."}
+              ? `Al guardar quedará en tus actividades. Con "Guardar y publicar" podrás publicarla en "${salonNombre ?? "tu salón"}" o en otro salón.`
+              : 'Al guardar quedará en tus actividades. Con "Guardar y publicar" eliges el salón o tutoría y la fecha límite.'}
         </p>
 
         <div className="form-group">
@@ -196,19 +194,6 @@ export default function CrearActividad() {
 
         <SubirMaterial materiales={materiales} onChange={setMateriales} />
 
-        {salonId && !esEdicion && (
-          <div className="form-group">
-            <label htmlFor="actividad-fecha">Fecha límite</label>
-            <input
-              id="actividad-fecha"
-              type="date"
-              value={fechaLimite}
-              onChange={(e) => setFechaLimite(e.target.value)}
-              required
-            />
-          </div>
-        )}
-
         {error && <p role="alert">{error}</p>}
         {resultado && (
           <p role="status">
@@ -217,25 +202,49 @@ export default function CrearActividad() {
           </p>
         )}
 
-        <button
-          type="submit"
-          className="btn-guardar-actividad"
-          disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
-        >
-          {guardando
-            ? "Guardando..."
-            : esEdicion
-              ? "Guardar cambios"
-              : salonId
-                ? "Guardar y publicar"
-                : "Guardar actividad"}
-        </button>
+        <div className="guardar-acciones">
+          <button
+            type="submit"
+            name="accion"
+            value="guardar"
+            className="btn-guardar-actividad"
+            disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
+          >
+            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Guardar actividad"}
+          </button>
+          <button
+            type="submit"
+            name="accion"
+            value="publicar"
+            className="btn-guardar-actividad"
+            disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
+          >
+            {guardando ? "Guardando..." : "Guardar y publicar"}
+          </button>
+        </div>
+        {!esEdicion && resultado && idActividad && (
+          <button
+            type="button"
+            className="btn-secundario"
+            onClick={() => setAPublicar({ id: idActividad, title: resultado.titulo })}
+          >
+            Publicar en un salón
+          </button>
+        )}{" "}
         {idActividad && (
           <a href={`/actividades/previa?actividad=${idActividad}`} className="plantilla-usar">
             Previsualizar como alumno
           </a>
         )}
       </form>
+
+      {aPublicar && (
+        <PublicarActividad
+          actividad={aPublicar}
+          salonInicialId={salonId ?? ""}
+          onCerrar={() => setAPublicar(null)}
+        />
+      )}
     </div>
   );
 }
