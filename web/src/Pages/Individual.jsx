@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { crearSalon, obtenerMisSalones, obtenerMiembros } from '../services/classroomService';
 import { mensajeDeError } from '../components/shared/errorHandler';
+import '../styles/individual.css';
 
 // Individual (tutorías): crear tutoría (salón INDIVIDUAL), ver su código de 5 caracteres
 // y ver el perfil del UsuarioA unido.
@@ -89,68 +90,76 @@ export default function Individual() {
   };
 
   const botonCopiar = (codigo) => (
-    <button type="button" onClick={() => handleCopiar(codigo)}>
+    <button type="button" className="boton-chico" onClick={() => handleCopiar(codigo)}>
       {codigoCopiado === codigo ? '¡Copiado!' : 'Copiar'}
     </button>
   );
 
   return (
-    <div className="pagina salones-container salones-ancho">
-      <div className="pagina-encabezado">
-        <h1>Individual</h1>
-        <p>Tutorías uno a uno: cada una tiene su código para que se una un solo alumno.</p>
-      </div>
+    <div className="ind-pagina">
+      <h1 className="titulo-pagina">Seguimiento individual</h1>
+      <p className="ind-intro">
+        Tutorías uno a uno: cada una tiene su código para que se una un solo alumno.
+      </p>
 
-      <section aria-labelledby="lista-tutorias" className="panel seccion-salones">
-        <div className="encabezado-seccion">
-          <h2 id="lista-tutorias" className="panel-titulo">Tus tutorías</h2>
-        </div>
+      <section aria-labelledby="lista-tutorias">
+        <h2 id="lista-tutorias" className="seccion-titulo">Tus tutorías</h2>
 
-        {cargandoTutorias && <p role="status">Cargando tutorías...</p>}
+        {cargandoTutorias && <p role="status" className="vacio">Cargando tutorías...</p>}
         {!cargandoTutorias && tutorias.length === 0 && (
-          <p className="sin-datos">No hay tutorías aún</p>
+          <p className="vacio">No hay tutorías aún</p>
         )}
 
-        <ul className="lista-salones">
+        <ul className="ind-lista">
           {tutorias.map((tutoria) => {
             const unidos = tutoria._count?.members;
 
             return (
-              <li key={tutoria.id} className="salon-card">
-                <div className="salon-info">
+              <li key={tutoria.id} className="ind-tarjeta">
+                <div className="ind-persona">
+                  <div className="avatar" aria-hidden="true">
+                    {(tutoria.name || '?').trim().slice(0, 2).toUpperCase()}
+                  </div>
                   <strong>{tutoria.name}</strong>
-                  <span className="salon-tipo">
+                  <br />
+                  <small>
                     {unidos == null
                       ? 'Individual'
                       : unidos > 0
                         ? 'Alumno unido'
                         : 'Esperando alumno'}
-                  </span>
+                  </small>
                 </div>
 
-                <div className="salon-codigo">
-                  <span>Código:</span>
-                  <code>{tutoria.joinCode}</code>
-                  {botonCopiar(tutoria.joinCode)}
-                </div>
+                <div className="ind-detalle">
+                  <div className="ind-notas">
+                    <div className="nota-caja">
+                      <span>Código</span>
+                      <code className="ind-codigo">{tutoria.joinCode}</code>
+                    </div>
+                    <div className="nota-caja">
+                      <span>Compartir</span>
+                      {botonCopiar(tutoria.joinCode)}
+                    </div>
+                  </div>
 
-                <button
-                  type="button"
-                  className="ver-miembros"
-                  aria-expanded={tutoriaAbierta === tutoria.id}
-                  onClick={() => handleVerPerfil(tutoria)}
-                >
-                  {tutoriaAbierta === tutoria.id ? 'Ocultar perfil' : 'Ver perfil del alumno'}
-                </button>
+                  <button
+                    type="button"
+                    className="boton boton-sec ind-ver"
+                    aria-expanded={tutoriaAbierta === tutoria.id}
+                    onClick={() => handleVerPerfil(tutoria)}
+                  >
+                    {tutoriaAbierta === tutoria.id ? 'Ocultar perfil' : 'Ver perfil del alumno'}
+                  </button>
 
-                {tutoriaAbierta === tutoria.id && (
-                  <div className="miembros">
-                    {cargandoPerfil && <p role="status">Cargando perfil...</p>}
-                    {!cargandoPerfil && miembros.length === 0 && (
-                      <p className="sin-datos">Sin miembros</p>
-                    )}
-                    {miembros.map((m) => (
-                      <dl key={m.student.id} className="perfil-alumno">
+                  {tutoriaAbierta === tutoria.id && (
+                    <div className="ind-miembros">
+                      {cargandoPerfil && <p role="status" className="vacio">Cargando perfil...</p>}
+                      {!cargandoPerfil && miembros.length === 0 && (
+                        <p className="vacio">Sin miembros</p>
+                      )}
+                      {miembros.map((m) => (
+                        <dl key={m.student.id} className="ind-perfil">
                         <dt>Correo</dt>
                         <dd>{m.student.email}</dd>
                         <dt>Rol</dt>
@@ -163,19 +172,20 @@ export default function Individual() {
                         <dd>{formatearFecha(m.student.createdAt)}</dd>
                       </dl>
                     ))}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </li>
             );
           })}
         </ul>
       </section>
 
-      <form className="panel crear-salon crear-salon-horizontal" onSubmit={handleCrear}>
-        <h3>Crear tutoría individual</h3>
-        <div className="crear-salon-campos campos-dos">
-          <div className="form-group">
-            <label htmlFor="tutoria-nombre">Nombre de la tutoría</label>
+      <form className="tarjeta ind-form" onSubmit={handleCrear}>
+        <h2 className="seccion-titulo">Crear tutoría individual</h2>
+        <div className="ind-form-campos">
+          <label className="campo" htmlFor="tutoria-nombre">
+            <span>Nombre de la tutoría</span>
             <input
               id="tutoria-nombre"
               type="text"
@@ -184,20 +194,20 @@ export default function Individual() {
               placeholder="Ej. Tutoría de lectura - Ana"
               required
             />
-          </div>
-          <button type="submit" disabled={creando || !nombre.trim()}>
+          </label>
+          <button className="boton" type="submit" disabled={creando || !nombre.trim()}>
             {creando ? 'Creando...' : 'Crear tutoría'}
           </button>
         </div>
-        {errorCrear && <p role="alert">{errorCrear}</p>}
+        {errorCrear && <p role="alert" className="mensaje error">{errorCrear}</p>}
       </form>
 
       {recienCreada && (
-        <section className="codigo-nuevo" role="status" aria-labelledby="codigo-nuevo-titulo">
-          <h3 id="codigo-nuevo-titulo">Tutoría {recienCreada.name} creada</h3>
+        <section className="tarjeta ind-nuevo" role="status" aria-labelledby="codigo-nuevo-titulo">
+          <h2 id="codigo-nuevo-titulo" className="seccion-titulo">Tutoría {recienCreada.name} creada</h2>
           <p>Comparte este código con tu alumno para que se una desde la app:</p>
-          <div className="salon-codigo">
-            <code className="codigo-grande">{recienCreada.joinCode}</code>
+          <div className="ind-nuevo-codigo">
+            <code className="ind-codigo ind-codigo-grande">{recienCreada.joinCode}</code>
             {botonCopiar(recienCreada.joinCode)}
           </div>
         </section>

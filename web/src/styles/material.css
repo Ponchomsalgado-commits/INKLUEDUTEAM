@@ -1,0 +1,199 @@
+/* ===== Subida de material (SubirMaterial): se usa en Crear actividad y en la Galería ===== */
+.mat {
+  min-width: 0;
+  margin: 0 0 1rem;
+}
+
+.mat .mat-titulo {
+  display: block;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-weight: 700;
+}
+
+.mat .mat-zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.25rem 1rem;
+  border: 2px dashed var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+
+.mat .mat-zona strong {
+  color: var(--tinta);
+}
+
+.mat .mat-zona span {
+  color: var(--suave);
+  font-size: 0.85rem;
+}
+
+.mat .mat-zona:hover,
+.mat .mat-zona:focus-visible,
+.mat .mat-zona.arrastrando {
+  border-color: var(--primario);
+  background: var(--fondo-2);
+}
+
+.mat .mat-zona .mat-zona-icono {
+  font-size: 2rem;
+}
+
+.mat .mat-avisos {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--bajo);
+  font-weight: 700;
+}
+
+.mat .mat-lista {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mat .mat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.mat .mat-item.mat-error {
+  border-color: var(--bajo);
+}
+
+.mat .mat-icono {
+  font-size: 1.4rem;
+}
+
+.mat .mat-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.mat .mat-info strong {
+  overflow-wrap: anywhere;
+}
+
+.mat .mat-info small {
+  color: var(--suave);
+}
+
+.mat .mat-error .mat-info small {
+  color: var(--bajo);
+}
+
+.mat .mat-info progress {
+  width: 100%;
+  accent-color: var(--acento);
+}
+
+/* Selector segmentado: Subir archivo / Elegir de mi galería */
+.mat .mat-fuentes {
+  display: flex;
+  margin-bottom: 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--fondo-3);
+  padding: 3px;
+  gap: 3px;
+}
+
+.mat .mat-fuente {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tinta);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mat .mat-fuente[aria-pressed="true"] {
+  background: var(--primario);
+  color: var(--sobre-primario);
+}
+
+.mat .mat-fuente:not([aria-pressed="true"]):hover {
+  background: var(--fondo-2);
+}
+
+/* Elegir de la galería */
+.mat .mat-galeria {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.mat .mat-galeria .buscador {
+  width: 100%;
+}
+
+.mat .mat-galeria-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.5rem;
+  max-height: 260px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.mat .mat-galeria-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mat .mat-galeria-item:hover {
+  background: var(--fondo-2);
+}
+
+.mat .mat-galeria-item.elegida {
+  border-color: var(--primario-hover);
+  background: var(--fondo-3);
+}
+
+.mat .mat-galeria-check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid var(--borde);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--sobre-primario);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mat .mat-galeria-item.elegida .mat-galeria-check {
+  border-color: var(--primario-hover);
+  background: var(--primario);
+}

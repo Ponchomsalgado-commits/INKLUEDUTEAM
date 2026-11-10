@@ -2,92 +2,125 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../auth/authContext';
 
-// Barra superior: logo de InkluEdu a la izquierda y, a la derecha, el engrane de ajustes
-// (con sesión) o los botones Unirse/Registrarse (sin sesión, solo en el inicio).
+// Encabezado: marca con huellita a la izquierda y, a la derecha, el botón de ajustes
+// (con sesión) o los botones de acceso (sin sesión, solo en el inicio).
 
 function LogoHuella() {
   return (
-    <svg className="logo-huella" viewBox="0 0 64 56" aria-hidden="true">
-      <circle cx="12" cy="20" r="7" />
-      <circle cx="26" cy="9" r="7" />
-      <circle cx="40" cy="9" r="7" />
-      <circle cx="54" cy="20" r="7" />
-      <ellipse cx="33" cy="39" rx="16" ry="14" />
+    <svg className="logo" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="12" cy="28" r="7" />
+      <circle cx="26" cy="15" r="7" />
+      <circle cx="42" cy="15" r="7" />
+      <circle cx="56" cy="28" r="7" />
+      <path d="M32 31c-10 0-18 9-18 16 0 6 5 9 11 8 3-1 5-2 7-2s4 1 7 2c6 1 11-2 11-8 0-7-8-16-18-16z" />
     </svg>
   );
 }
 
-function MenuAjustes() {
+function leerAjustes() {
+  try {
+    return JSON.parse(localStorage.getItem('ajustes') || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function aplicarAjustes(ajustes) {
+  document.documentElement.style.fontSize = ajustes.letra || '100%';
+  document.documentElement.classList.toggle('contraste', Boolean(ajustes.contraste));
+}
+
+function Ajustes() {
   const { cerrarSesion } = useAuth();
-  const [abierto, setAbierto] = useState(false);
-  const contenedor = useRef(null);
+  const ventana = useRef(null);
+  const [ajustes, setAjustes] = useState(leerAjustes);
 
   useEffect(() => {
-    if (!abierto) return undefined;
-    const alClicFuera = (e) => {
-      if (!contenedor.current?.contains(e.target)) setAbierto(false);
-    };
-    const alPresionar = (e) => {
-      if (e.key === 'Escape') setAbierto(false);
-    };
-    document.addEventListener('mousedown', alClicFuera);
-    window.addEventListener('keydown', alPresionar);
-    return () => {
-      document.removeEventListener('mousedown', alClicFuera);
-      window.removeEventListener('keydown', alPresionar);
-    };
-  }, [abierto]);
+    aplicarAjustes(ajustes);
+    try {
+      localStorage.setItem('ajustes', JSON.stringify(ajustes));
+    } catch {
+      // sin almacenamiento disponible: los ajustes valen solo para esta visita
+    }
+  }, [ajustes]);
 
   return (
-    <div className="ajustes" ref={contenedor}>
+    <>
       <button
         type="button"
-        className="btn-ajustes"
-        aria-label="Ajustes"
-        aria-expanded={abierto}
-        aria-haspopup="menu"
-        onClick={() => setAbierto((v) => !v)}
+        className="boton-icono"
+        aria-label="Abrir ajustes"
+        onClick={() => ventana.current?.showModal()}
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84a.47.47 0 0 0-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.74 8.87a.47.47 0 0 0 .12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.48.48 0 0 0-.12-.61zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z" />
-        </svg>
+        ⚙️
       </button>
 
-      {abierto && (
-        <div className="ajustes-menu" role="menu">
-          <Link to="/inicio" role="menuitem" onClick={cerrarSesion}>
+      <dialog ref={ventana} aria-labelledby="ajustes-titulo">
+        <div className="dialogo-cab">
+          <h2 id="ajustes-titulo">Ajustes</h2>
+          <button
+            type="button"
+            className="boton-icono"
+            aria-label="Cerrar ajustes"
+            onClick={() => ventana.current?.close()}
+          >
+            ✕
+          </button>
+        </div>
+        <div className="dialogo-cuerpo">
+          <label className="campo">
+            <span>Tamaño de letra</span>
+            <select
+              value={ajustes.letra || '100%'}
+              onChange={(e) => setAjustes((a) => ({ ...a, letra: e.target.value }))}
+            >
+              <option value="100%">Normal</option>
+              <option value="115%">Grande</option>
+              <option value="130%">Muy grande</option>
+            </select>
+          </label>
+          <label className="campo">
+            <span>
+              <input
+                type="checkbox"
+                style={{ width: 'auto' }}
+                checked={Boolean(ajustes.contraste)}
+                onChange={(e) => setAjustes((a) => ({ ...a, contraste: e.target.checked }))}
+              />{' '}
+              Alto contraste
+            </span>
+          </label>
+          <Link
+            to="/inicio"
+            className="boton boton-sec"
+            onClick={() => {
+              ventana.current?.close();
+              cerrarSesion();
+            }}
+          >
             Cerrar sesión
           </Link>
         </div>
-      )}
-    </div>
+      </dialog>
+    </>
   );
 }
 
-export default function BarraSuperior({ mostrarAcceso }) {
+export default function BarraSuperior() {
   const { haySesion } = useAuth();
 
+  // Los ajustes guardados se aplican aunque no haya sesión
+  useEffect(() => {
+    if (!haySesion) aplicarAjustes(leerAjustes());
+  }, [haySesion]);
+
   return (
-    <header className="barra-app">
-      <Link to="/" className="logo-app" aria-label="InkluEdu, ir al inicio">
-        <span className="logo-texto">INKLUEDU</span>
-        <LogoHuella />
+    <header className="encabezado">
+      <Link to="/" className="marca" aria-label="InkluEdu, ir al inicio">
+        InkluEdu <LogoHuella />
       </Link>
 
-      {haySesion ? (
-        <MenuAjustes />
-      ) : (
-        mostrarAcceso && (
-          <nav className="inicio-acciones" aria-label="Acceso">
-            <Link to="/login" className="btn-inicio btn-inicio-secundario">
-              Unirse
-            </Link>
-            <Link to="/register" className="btn-inicio btn-inicio-principal">
-              Registrarse
-            </Link>
-          </nav>
-        )
-      )}
+      {haySesion && <Ajustes />}
     </header>
   );
 }

@@ -31,6 +31,12 @@ export class MediaController {
     return this.mediaService.upload(user.sub, file);
   }
 
+  @Get()
+  @Roles(Role.PROFESOR)
+  list(@CurrentUser() user: JwtPayload) {
+    return this.mediaService.list(user.sub);
+  }
+
   @Get('url')
   @Roles(Role.PROFESOR)
   async signedUrl(@CurrentUser() user: JwtPayload, @Query('key') key: string) {

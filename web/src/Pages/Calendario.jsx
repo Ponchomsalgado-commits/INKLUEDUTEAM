@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../styles/calendario.css';
 
 // Calendario solo visual: todavía no está definido qué eventos mostrará
 // (fechas límite de actividades, tutorías, ...). Por ahora solo navega entre meses.
@@ -32,36 +33,34 @@ export default function Calendario() {
   const esMesActual = vista.anio === hoy.getFullYear() && vista.mes === hoy.getMonth();
 
   return (
-    <div className="pagina">
-      <div className="pagina-encabezado">
-        <h1>Calendario</h1>
-        <p>Vista previa. Pronto aquí verás las fechas de tus actividades y tutorías.</p>
-      </div>
+    <div className="cal-pagina">
+      <h1 className="titulo-pagina">Calendario</h1>
+      <p className="cal-intro">Vista previa. Pronto aquí verás las fechas de tus actividades y tutorías.</p>
 
-      <section className="panel calendario" aria-label={`Calendario de ${titulo}`}>
-        <div className="calendario-cabecera">
-          <button type="button" onClick={() => mover(-1)} aria-label="Mes anterior">
-            ‹
+      <section aria-label={`Calendario de ${titulo}`}>
+        <div className="cal-cab">
+          <button type="button" className="boton boton-sec" onClick={() => mover(-1)} aria-label="Mes anterior">
+            ‹ Anterior
           </button>
           <h2>{titulo}</h2>
-          <button type="button" onClick={() => mover(1)} aria-label="Mes siguiente">
-            ›
+          <button type="button" className="boton boton-sec" onClick={() => mover(1)} aria-label="Mes siguiente">
+            Siguiente ›
           </button>
         </div>
 
-        <div className="calendario-rejilla">
+        <div className="cal">
           {DIAS.map((d) => (
-            <span key={d} className="calendario-dia-nombre">
+            <div key={d} className="cal-semana">
               {d}
-            </span>
+            </div>
           ))}
           {diasDelMes(vista.anio, vista.mes).map((dia, i) => (
-            <span
+            <div
               key={i}
-              className={`calendario-celda${dia ? '' : ' vacia'}${esMesActual && dia === hoy.getDate() ? ' hoy' : ''}`}
+              className={dia ? `cal-dia${esMesActual && dia === hoy.getDate() ? ' hoy' : ''}` : 'cal-vacio'}
             >
-              {dia}
-            </span>
+              {dia ? <span className="numero">{dia}</span> : null}
+            </div>
           ))}
         </div>
       </section>

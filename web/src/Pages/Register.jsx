@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../auth/authContext';
+import '../styles/publico.css';
 
 // Debe coincidir con PASSWORD_MIN_LENGTH del backend (backend/src/auth/dto/register.dto.ts)
 const PASSWORD_MIN_LENGTH = 8;
@@ -42,48 +43,75 @@ export default function Register() {
   };
 
   return (
-    <section className="tarjeta auth-card">
-      <h2>Crear cuenta de profesor</h2>
-      <p className="auth-subtitulo">Regístrate para gestionar tus salones</p>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="register-email">Correo electrónico</label>
-          <input
-            id="register-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="tucorreo@escuela.mx"
-            autoComplete="email"
-            required
-          />
+    <div className="pub-auth">
+      <div className="pub-auth-form">
+        <section className="pub-tarjeta">
+          <h1>Crear cuenta</h1>
+
+          <form onSubmit={handleSubmit}>
+            <div className="pub-campo-icono">
+              <div className="pub-icono-caja" aria-hidden="true">
+                ✉️
+              </div>
+              <label className="campo">
+                <span>Correo electrónico</span>
+                <input
+                  id="register-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nombre@correo.com"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="pub-campo-icono">
+              <div className="pub-icono-caja" aria-hidden="true">
+                🔒
+              </div>
+              <label className="campo">
+                <span>Contraseña (mínimo {PASSWORD_MIN_LENGTH} caracteres)</span>
+                <input
+                  id="register-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={PASSWORD_MIN_LENGTH}
+                  placeholder="Crea una contraseña segura"
+                  autoComplete="new-password"
+                  required
+                />
+              </label>
+            </div>
+
+            <p role="status" className={`pub-mensaje ${esError ? 'error' : 'exito'}`}>
+              {mensaje}
+            </p>
+            <button type="submit" className="boton" disabled={cargando}>
+              {cargando ? 'Registrando...' : 'Crear cuenta'}
+            </button>
+          </form>
+
+          <hr className="pub-separador" />
+
+          <p className="pub-enlace-pie">
+            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+          </p>
+          <p className="pub-enlace-pie">
+            <Link to="/">Volver al inicio</Link>
+          </p>
+        </section>
+      </div>
+
+      <div className="pub-deco">
+        <div className="pub-animales" aria-hidden="true">
+          🐸🦋🐝🐱
         </div>
-        <div className="form-group">
-          <label htmlFor="register-password">Contraseña</label>
-          <input
-            id="register-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            minLength={PASSWORD_MIN_LENGTH}
-            placeholder={`Mínimo ${PASSWORD_MIN_LENGTH} caracteres`}
-            autoComplete="new-password"
-            required
-          />
-        </div>
-        <button type="submit" className="btn-principal" disabled={cargando}>
-          {cargando ? 'Registrando...' : 'Registrarse'}
-        </button>
-      </form>
-      {mensaje && (
-        <p role="status" className={esError ? 'mensaje mensaje-error' : 'mensaje mensaje-ok'}>
-          {mensaje}
-        </p>
-      )}
-      <p className="auth-cambio">
-        ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
-      </p>
-    </section>
+        <p>Crea tu cuenta y prepara tu primera actividad en minutos.</p>
+      </div>
+    </div>
   );
 }
 

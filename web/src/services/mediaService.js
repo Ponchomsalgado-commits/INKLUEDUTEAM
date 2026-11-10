@@ -2,6 +2,13 @@ import apiClient from "./apiClient";
 
 // llamadas al backend para el material didáctico (lectura, video o audio) de una actividad
 
+// GET /media -> todo el material que subió el profesor, más reciente primero.
+// Devuelve [{ key, name, contentType, url, expiresIn, size, lastModified }]
+export async function listarMaterial() {
+  const response = await apiClient.get("/media");
+  return Array.isArray(response.data) ? response.data : [];
+}
+
 // POST /media/upload -> sube un archivo a MinIO a través del backend.
 // Devuelve { key, name, contentType, url, expiresIn, size }:
 //  - key: lo que se guarda en la actividad (mediaUrls). Es estable.

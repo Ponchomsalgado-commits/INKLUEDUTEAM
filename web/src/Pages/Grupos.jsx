@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { mensajeDeError } from "../components/shared/errorHandler";
 import { obtenerMisSalones, obtenerMiembros } from "../services/classroomService";
+import { COLORES_GRUPO } from "../components/shared/colorSalon";
+import "../styles/grupos.css";
 
 // T2101: Pantalla "Grupos": salones de tipo GRUPO, su código y la lista de usuarios unidos.
 // Los salones individuales están en /individual. Crear un salón se hace en /salones/crear.
+// Cada salón abre su detalle en /grupos/:id, donde también se crean sus actividades.
 
 export default function Grupos() {
   const [salones, setSalones] = useState([]);
@@ -61,63 +63,83 @@ export default function Grupos() {
   };
 
   return (
-    <div className="pagina salones-container salones-ancho">
-      <div className="pagina-encabezado">
-        <h1>Grupos</h1>
-        <p>Tus salones grupales, su código para unirse y los alumnos inscritos.</p>
+    <div className="gr-pagina">
+      <div className="gr-cab">
+        <h1 className="titulo-pagina">Mis grupos</h1>
+        <Link to="/salones/crear" className="boton">
+          + Crear grupo
+        </Link>
       </div>
+      <p className="gr-sub">Tus salones grupales, su código para unirse y los alumnos inscritos.</p>
 
-      <section aria-labelledby="lista-salones" className="panel seccion-salones">
-        <div className="encabezado-seccion">
-          <h2 id="lista-salones" className="panel-titulo">Tus grupos</h2>
-          <Link to="/salones/crear" className="btn-crear">
-            + Crear grupo
-          </Link>
-        </div>
+      <section aria-labelledby="lista-salones">
+        <h2 id="lista-salones" className="gr-oculto">Tus grupos</h2>
 
-        {cargandoSalones && <p role="status">Cargando grupos...</p>}
+        {cargandoSalones && <p role="status" className="vacio">Cargando grupos...</p>}
         {!cargandoSalones && salones.length === 0 && (
-          <p className="sin-datos">No hay grupos aún</p>
+          <p className="vacio">No hay grupos aún</p>
         )}
 
-        <ul className="lista-salones">
-          {salones.map((salon) => (
-            <li key={salon.id} className="salon-card">
-              <div className="salon-info">
-                <strong>{salon.name}</strong>
-                <span className="salon-tipo">Grupo</span>
+        <ul className="gr-rejilla">
+          {salones.map((salon, i) => (
+            <li key={salon.id} className="gr-item">
+              <div className="gr-tarjeta">
+                <div
+                  className="gr-lado"
+                  style={{ background: COLORES_GRUPO[i % COLORES_GRUPO.length] }}
+                  aria-hidden="true"
+                >
+                  👥
+                </div>
+                <div className="gr-info">
+                  <h3>
+                    <Link to={`/grupos/${salon.id}`} className="gr-enlace-salon">
+                      {salon.name}
+                    </Link>
+                  </h3>
+                  <p>Tipo: Grupo</p>
+                  {salon._count?.members != null && <p>Alumnos: {salon._count.members}</p>}
+                  <p className="gr-codigo">
+                    Código: <strong>{salon.joinCode}</strong>
+                    <button
+                      type="button"
+                      className="boton-chico"
+                      onClick={() => handleCopiar(salon.joinCode)}
+                    >
+                      {codigoCopiado === salon.joinCode ? "¡Copiado!" : "Copiar"}
+                    </button>
+                  </p>
+                  <div className="gr-acciones">
+                    <Link to={`/grupos/${salon.id}?pestana=crear`} className="boton gr-miembros-boton">
+                      Crear actividad
+                    </Link>
+                    <button
+                      type="button"
+                      className="boton boton-sec gr-miembros-boton"
+                      aria-expanded={salonAbierto === salon.id}
+                      onClick={() => handleVerMiembros(salon)}
+                    >
+                      {salonAbierto === salon.id ? "Ocultar usuarios" : "Ver usuarios unidos"}
+                    </button>
+                  </div>
+                </div>
               </div>
-
-              <div className="salon-codigo">
-                <span>Código:</span>
-                <code>{salon.joinCode}</code>
-                <button type="button" onClick={() => handleCopiar(salon.joinCode)}>
-                  {codigoCopiado === salon.joinCode ? "¡Copiado!" : "Copiar"}
-                </button>
-              </div>
-
-              <button
-                type="button"
-                className="ver-miembros"
-                aria-expanded={salonAbierto === salon.id}
-                onClick={() => handleVerMiembros(salon)}
-              >
-                {salonAbierto === salon.id ? "Ocultar usuarios" : "Ver usuarios unidos"}
-                {salon._count?.members != null && ` (${salon._count.members})`}
-              </button>
 
               {salonAbierto === salon.id && (
-                <div className="miembros">
-                  {cargandoMiembros && <p role="status">Cargando usuarios...</p>}
+                <div className="gr-miembros">
+                  {cargandoMiembros && <p role="status" className="vacio">Cargando usuarios...</p>}
                   {!cargandoMiembros && miembros.length === 0 && (
-                    <p className="sin-datos">Sin miembros</p>
+                    <p className="vacio">Sin miembros</p>
                   )}
                   {miembros.length > 0 && (
-                    <ul>
+                    <ul className="gr-alumnos">
                       {miembros.map((m) => (
-                        <li key={m.student.id}>
-                          {m.student.email}
-                          <small> · se unió el {new Date(m.joinedAt).toLocaleDateString()}</small>
+                        <li key={m.student.id} className="gr-alumno">
+                          <span className="gr-avatar" aria-hidden="true">
+                            {(m.student.email || "?").slice(0, 2).toUpperCase()}
+                          </span>
+                          <span>{m.student.email}</span>
+                          <small>se unió el {new Date(m.joinedAt).toLocaleDateString()}</small>
                         </li>
                       ))}
                     </ul>
@@ -128,7 +150,6 @@ export default function Grupos() {
           ))}
         </ul>
       </section>
-
     </div>
   );
 }

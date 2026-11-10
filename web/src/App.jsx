@@ -5,6 +5,7 @@ import Register from './Pages/Register';
 import Galeria from './Pages/Galeria';
 import Editor from './Pages/Editor';
 import Grupos from './Pages/Grupos';
+import Clase from './Pages/Clase';
 import Individual from './Pages/Individual';
 import Calendario from './Pages/Calendario';
 import CrearSalones from './Pages/CrearSalones';
@@ -21,18 +22,18 @@ import ScrollAlNavegar from './routes/ScrollAlNavegar';
 function App() {
   const { haySesion } = useAuth();
   const { pathname } = useLocation();
-  const enInicio = pathname === '/' || pathname === '/inicio';
+  const paginaPublica = !haySesion && ['/', '/inicio', '/login', '/register'].includes(pathname);
 
   return (
     <div className={`app${haySesion ? ' con-sesion' : ''}`}>
       <ScrollAlNavegar />
 
-      <BarraSuperior mostrarAcceso={enInicio} />
+      {!paginaPublica && <BarraSuperior />}
 
-      <div className="cuerpo-app">
+      <div className="cuerpo">
         {haySesion && <MenuDepleja />}
 
-        <main className="contenido">
+        <main className={`contenido${paginaPublica ? ' contenido-publico' : ''}`}>
           <Routes>
             <Route index element={haySesion ? <Navigate to="/galeria" replace /> : <Inicio />} />
 
@@ -49,11 +50,13 @@ function App() {
               <Route path="galeria" element={<Galeria />} />
               <Route path="editor" element={<Editor />} />
               <Route path="grupos" element={<Grupos />} />
+              <Route path="grupos/:id" element={<Clase />} />
               <Route path="individual" element={<Individual />} />
               <Route path="calendario" element={<Calendario />} />
 
               <Route path="salones/crear" element={<CrearSalones key="salon" />} />
-              <Route path="salones/crear/actividad" element={<CrearActividad key="crear" />} />
+              <Route path="salones/crear/actividad" element={<Navigate to="/grupos" replace />} />
+              <Route path="actividades/nueva" element={<CrearActividad key="crear" />} />
               <Route path="salones/tutorias/crear" element={<CrearSalones key="tutoria" />} />
               <Route path="actividades/editar" element={<CrearActividad key="editar" />} />
               <Route path="actividades/previa" element={<PrevisualizarActividad />} />

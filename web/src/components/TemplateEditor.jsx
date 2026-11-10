@@ -46,19 +46,19 @@ export default function TemplateEditor({ schemaPreguntas, preguntas, onChange })
   const quitarPregunta = (id) => onChange(preguntas.filter((p) => p.id !== id));
 
   return (
-    <div className="template-editor">
-      <p className="editor-contador">
+    <div className="te">
+      <p className="te-contador">
         {preguntas.length} de {maxPreguntas} preguntas
       </p>
 
-      <ol className="editor-preguntas">
+      <ol className="te-preguntas">
         {preguntas.map((pregunta, numero) => (
-          <li key={pregunta.id} className="editor-pregunta">
-            <div className="editor-pregunta-encabezado">
+          <li key={pregunta.id} className="te-pregunta">
+            <div className="te-pregunta-cab">
               <h4>Pregunta {numero + 1}</h4>
               <button
                 type="button"
-                className="btn-secundario"
+                className="boton-chico"
                 onClick={() => quitarPregunta(pregunta.id)}
                 disabled={preguntas.length <= minPreguntas}
               >
@@ -66,7 +66,7 @@ export default function TemplateEditor({ schemaPreguntas, preguntas, onChange })
               </button>
             </div>
 
-            <div className="form-group">
+            <div className="campo-bloque">
               <label htmlFor={`${pregunta.id}-texto`}>Texto de la pregunta</label>
               <input
                 id={`${pregunta.id}-texto`}
@@ -79,12 +79,12 @@ export default function TemplateEditor({ schemaPreguntas, preguntas, onChange })
               />
             </div>
 
-            <fieldset className="form-group editor-opciones">
+            <fieldset className="campo-bloque te-opciones">
               <legend>
                 Opciones (marca la correcta) · de {minOpciones} a {maxOpciones}
               </legend>
               {pregunta.opciones.map((opcion, i) => (
-                <div key={i} className="editor-opcion">
+                <div key={i} className="te-opcion">
                   <input
                     type="radio"
                     name={`${pregunta.id}-correcta`}
@@ -103,7 +103,7 @@ export default function TemplateEditor({ schemaPreguntas, preguntas, onChange })
                   />
                   <button
                     type="button"
-                    className="btn-secundario"
+                    className="boton-chico"
                     onClick={() => quitarOpcion(pregunta, i)}
                     disabled={pregunta.opciones.length <= minOpciones}
                     aria-label={`Quitar opción ${i + 1}`}
@@ -114,7 +114,7 @@ export default function TemplateEditor({ schemaPreguntas, preguntas, onChange })
               ))}
               <button
                 type="button"
-                className="btn-secundario"
+                className="boton-chico"
                 onClick={() => agregarOpcion(pregunta)}
                 disabled={pregunta.opciones.length >= maxOpciones}
               >
@@ -125,7 +125,12 @@ export default function TemplateEditor({ schemaPreguntas, preguntas, onChange })
         ))}
       </ol>
 
-      <button type="button" onClick={agregarPregunta} disabled={preguntas.length >= maxPreguntas}>
+      <button
+        type="button"
+        className="boton boton-sec"
+        onClick={agregarPregunta}
+        disabled={preguntas.length >= maxPreguntas}
+      >
         + Agregar pregunta
       </button>
     </div>

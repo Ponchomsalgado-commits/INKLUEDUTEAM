@@ -1,0 +1,207 @@
+/* ===== Piezas reutilizables (del boceto) ===== */
+.boton {
+  display: inline-block;
+  padding: 0.65rem 1.2rem;
+  border: 2px solid var(--primario);
+  border-radius: 10px;
+  background: var(--primario);
+  color: var(--sobre-primario);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton:hover {
+  border-color: var(--primario-hover);
+  background: var(--primario-hover);
+}
+
+.boton-sec {
+  background: #fff;
+  color: var(--tinta);
+}
+
+.boton-sec:hover {
+  background: var(--fondo-2);
+  color: var(--tinta);
+}
+
+.boton-icono {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--borde);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 1.2rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton-icono:hover {
+  background: var(--fondo-2);
+}
+
+.boton-chico {
+  padding: 0.25rem 0.7rem;
+  border: 2px solid var(--borde);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.campo {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.campo > span {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.campo input,
+.campo textarea,
+.campo select {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 2px solid var(--borde);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+}
+
+.mensaje {
+  min-height: 1.5rem;
+  font-weight: 700;
+}
+
+.mensaje.error {
+  color: var(--bajo);
+}
+
+.mensaje.exito {
+  color: var(--ok);
+}
+
+.vacio {
+  color: var(--suave);
+}
+
+.tarjeta {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: var(--superficie);
+}
+
+.logo {
+  width: 1.6em;
+  height: 1.6em;
+  fill: var(--acento);
+  vertical-align: middle;
+}
+
+/* Pestañas (Clase y Editor) */
+.pestanas {
+  display: flex;
+  gap: 0;
+}
+
+.pestanas button {
+  flex: 1;
+  padding: 0.85rem 0.5rem;
+  border: 2px solid var(--tinta);
+  background: var(--fondo-3);
+  color: var(--tinta);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pestanas button[aria-selected='true'] {
+  background: var(--tinta);
+  color: #fff;
+}
+
+/* Ventana emergente */
+dialog {
+  width: min(560px, 92vw);
+  padding: 0;
+  border: none;
+  border-radius: 16px;
+  color: var(--tinta);
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+
+.dialogo-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--fondo-2);
+}
+
+.dialogo-cab h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.dialogo-cuerpo {
+  padding: 1.25rem;
+}
+
+/* Páginas con buscador */
+.barra {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.buscador {
+  flex: 1;
+  padding-left: 1.2rem;
+  border-radius: 999px;
+}
+
+.titulo-pagina {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.seccion-titulo {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.2rem;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.chip-filtro {
+  padding: 0.35rem 0.9rem;
+  border: 2px solid var(--borde);
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip-filtro[aria-pressed='true'] {
+  border-color: var(--tinta);
+  background: var(--tinta);
+  color: #fff;
+}

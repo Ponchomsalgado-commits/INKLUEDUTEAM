@@ -4,17 +4,15 @@ import { crearSalon } from "../services/classroomService";
 import { obtenerPlantillas } from "../services/activityService";
 import { mensajeDeError } from "../components/shared/errorHandler";
 import { ICONOS_SKIN } from "../components/shared/iconosSkin";
+import "../styles/grupos.css";
 
 // Pantalla exclusiva para crear un salón y, debajo, el catálogo de plantillas.
 
-// Enlace al editor (CrearActividad); si ya se creó un salón, la actividad se publicará ahí
-function enlaceEditor(plantillaId, salon) {
-  const params = new URLSearchParams({ plantilla: plantillaId });
-  if (salon) {
-    params.set("salon", salon.id);
-    params.set("salonNombre", salon.name);
-  }
-  return `/salones/crear/actividad?${params}`;
+// Las actividades se crean dentro del salón: con un salón recién creado se abre su pestaña
+// "Crear actividad" con la plantilla elegida; sin salón se manda a elegir uno.
+function enlacePlantilla(plantillaId, salon) {
+  if (!salon) return "/grupos";
+  return `/grupos/${salon.id}?${new URLSearchParams({ pestana: "crear", plantilla: plantillaId })}`;
 }
 
 export default function CrearSalones() {
@@ -25,7 +23,7 @@ export default function CrearSalones() {
   const [recienCreado, setRecienCreado] = useState(null);
   const [copiado, setCopiado] = useState(false);
 //Metodos para obtener las plantillas de minijuego desde el backend y mostrarlas en la pantalla de creación de salones.(victor)
-const [plantillas, setPlantillas] = useState([]);  
+const [plantillas, setPlantillas] = useState([]);
 const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
 
   useEffect(() => {
@@ -63,45 +61,47 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
   };
 
   return (
-    <div className="tarjeta salones-container salones-ancho">
-      <Link to="/grupos" className="enlace-volver">
-        ← Volver a Grupos
+    <div className="gr-pagina">
+      <Link to="/grupos" className="volver">
+        ← Volver a grupos
       </Link>
+      <h1 className="titulo-pagina">Crear salón</h1>
 
-      <form className="crear-salon crear-salon-horizontal seccion-salones" onSubmit={handleCrear}>
-        <h2>Crear salón</h2>
-        <div className="crear-salon-campos">
-          <div className="form-group">
-            <label htmlFor="salon-nombre">Nombre del salón</label>
-            <input
-              id="salon-nombre"
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej. 3°A Matemáticas"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="salon-tipo">Tipo</label>
-            <select id="salon-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-              <option value="GRUPO">Grupo</option>
-              <option value="INDIVIDUAL">Individual</option>
-            </select>
-          </div>
-          <button type="submit" disabled={creando || !nombre.trim()}>
-            {creando ? "Creando..." : "Crear salón"}
-          </button>
-        </div>
-        {errorCrear && <p role="alert">{errorCrear}</p>}
+      <form className="tarjeta gr-form" onSubmit={handleCrear}>
+        <label className="campo" htmlFor="salon-nombre">
+          <span>Nombre del salón</span>
+          <input
+            id="salon-nombre"
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Ej. 3°A Matemáticas"
+            required
+          />
+        </label>
+        <label className="campo" htmlFor="salon-tipo">
+          <span>Tipo</span>
+          <select id="salon-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+            <option value="GRUPO">Grupo</option>
+            <option value="INDIVIDUAL">Individual</option>
+          </select>
+        </label>
+        <button type="submit" className="boton" disabled={creando || !nombre.trim()}>
+          {creando ? "Creando..." : "Crear salón"}
+        </button>
+        {errorCrear && <p role="alert" className="mensaje error">{errorCrear}</p>}
 
         {recienCreado && (
-          <section className="codigo-nuevo" role="status" aria-labelledby="salon-nuevo-titulo">
-            <h3 id="salon-nuevo-titulo">Salón "{recienCreado.name}"" creado</h3>
+          <section className="gr-nuevo" role="status" aria-labelledby="salon-nuevo-titulo">
+            <h3 id="salon-nuevo-titulo">Salón "{recienCreado.name}" creado</h3>
             <p>Comparte este código con tus alumnos para que se unan desde la app:</p>
-            <div className="salon-codigo">
-              <code className="codigo-grande">{recienCreado.joinCode}</code>
-              <button type="button" onClick={() => handleCopiar(recienCreado.joinCode)}>
+            <div className="gr-codigo">
+              <strong className="gr-codigo-grande">{recienCreado.joinCode}</strong>
+              <button
+                type="button"
+                className="boton-chico"
+                onClick={() => handleCopiar(recienCreado.joinCode)}
+              >
                 {copiado ? "¡Copiado!" : "Copiar"}
               </button>
             </div>
@@ -110,32 +110,32 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
       </form>
 
       <section aria-labelledby="catalogo-plantillas">
-        <h3 id="catalogo-plantillas">Catálogo de plantillas</h3>
-        <p className="catalogo-subtitulo">Plantillas disponibles para tus salones.</p>
+        <h2 id="catalogo-plantillas" className="seccion-titulo">Catálogo de plantillas</h2>
+        <p className="gr-sub">Plantillas disponibles para tus salones.</p>
 
-        {cargandoPlantillas && <p role="status">Cargando plantillas...</p>}
+        {cargandoPlantillas && <p role="status" className="vacio">Cargando plantillas...</p>}
         {!cargandoPlantillas && plantillas.length === 0 && (
-          <p className="sin-datos">No hay plantillas aún</p>
+          <p className="vacio">No hay plantillas aún</p>
         )}
 
-        <ul className="catalogo-plantillas">
+        <ul className="gr-plantillas">
           {plantillas.map((plantilla) => (
-            <li key={plantilla.id} className="plantilla-card">
-              <span className="plantilla-icono" aria-hidden="true">
+            <li key={plantilla.id} className="gr-plantilla">
+              <span className="gr-plantilla-icono" aria-hidden="true">
                 {ICONOS_SKIN[plantilla.skin] ?? "🎮"}
               </span>
               <strong>{plantilla.displayName}</strong>
-              <span className="salon-tipo">{plantilla.type}</span>
+              <small>{plantilla.type}</small>
 
-              <ul className="plantilla-campos">
+              <ul className="gr-campos">
                 {Object.entries(plantilla.schemaJson?.fields ?? {}).map(([clave, campo]) => (
                   <li key={clave}>
                     {campo.type === "array" ? `${clave}: de ${campo.minItems} a ${campo.maxItems}` : clave}
                   </li>
                 ))}
               </ul>
-              <Link to={enlaceEditor(plantilla.id, recienCreado)} className="plantilla-usar">
-                Usar plantilla
+              <Link to={enlacePlantilla(plantilla.id, recienCreado)} className="boton boton-sec">
+                {recienCreado ? "Usar plantilla" : "Elegir salón"}
               </Link>
             </li>
           ))}

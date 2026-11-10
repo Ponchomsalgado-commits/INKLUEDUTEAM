@@ -1,0 +1,22 @@
+.cal-pagina { max-width: 1000px; }
+.cal-pagina .cal-intro { color: var(--suave); }
+
+.cal-pagina .cal-cab { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.cal-pagina .cal-cab h2 { margin: 0; font-size: 1.6rem; text-transform: capitalize; }
+.cal-pagina .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-pagina .cal-semana { font-weight: 700; text-align: center; padding: .4rem; color: var(--suave); }
+.cal-pagina .cal-dia {
+  min-height: 96px; padding: .4rem; text-align: left;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px;
+  display: flex; flex-direction: column; gap: .25rem; overflow: hidden;
+}
+.cal-pagina .cal-dia:hover { border-color: var(--primario); }
+.cal-pagina .cal-dia.hoy .numero {
+  background: var(--primario); color: var(--sobre-primario); border-radius: 50%;
+  width: 1.7rem; height: 1.7rem; display: inline-flex; align-items: center; justify-content: center;
+}
+.cal-pagina .cal-vacio { min-height: 96px; }
+
+@media (max-width: 700px) {
+  .cal-pagina .cal-dia, .cal-pagina .cal-vacio { min-height: 64px; }
+}

@@ -1,0 +1,45 @@
+.ind-pagina { max-width: 1000px; }
+.ind-intro { color: var(--suave); }
+
+.ind-pagina .ind-lista { display: grid; gap: 1rem; list-style: none; margin: 0 0 1.5rem; padding: 0; }
+.ind-pagina .ind-tarjeta {
+  display: flex; gap: 1rem;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 1rem;
+}
+.ind-pagina .ind-persona { width: 140px; flex: none; text-align: center; }
+.ind-pagina .ind-persona small { color: var(--suave); }
+.ind-pagina .avatar {
+  width: 72px; height: 72px; font-size: 1.5rem; margin: 0 auto .5rem;
+  border-radius: 50%;
+  background: var(--primario); color: var(--sobre-primario); font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.ind-pagina .ind-detalle { flex: 1; min-width: 0; }
+.ind-pagina .ind-notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; }
+.ind-pagina .nota-caja {
+  background: var(--fondo-2); border-radius: 10px; padding: .75rem;
+  display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+}
+.ind-pagina .ind-codigo {
+  font-weight: 700; font-size: 1.1rem; letter-spacing: .1em;
+  background: var(--superficie); border: 2px solid var(--borde); border-radius: 10px; padding: .25rem .6rem;
+}
+.ind-pagina .ind-codigo-grande { font-size: 1.6rem; }
+.ind-pagina .ind-ver { margin-top: .75rem; }
+.ind-pagina .ind-miembros { margin-top: .75rem; }
+.ind-pagina .ind-perfil {
+  display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem;
+  background: var(--fondo-3); border-radius: 10px; padding: .75rem 1rem; margin: 0 0 .5rem;
+}
+.ind-pagina .ind-perfil dt { font-weight: 700; }
+.ind-pagina .ind-perfil dd { margin: 0; overflow-wrap: anywhere; }
+
+.ind-pagina .ind-form { margin-bottom: 1rem; }
+.ind-pagina .ind-form-campos { display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap; }
+.ind-pagina .ind-form-campos .campo { flex: 1; min-width: 220px; margin-bottom: 0; }
+.ind-pagina .ind-nuevo-codigo { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  .ind-pagina .ind-tarjeta { flex-direction: column; }
+  .ind-pagina .ind-persona { width: auto; }
+}

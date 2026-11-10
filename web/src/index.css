@@ -1,25 +1,51 @@
+/* Atkinson Hyperlegible: letra pensada para leer fácil (útil para TDAH y dislexia). */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+
+/* Colores en un solo lugar: cambia aquí y cambia en todo el sitio */
 :root {
-  /* Paleta InkluEdu */
-  --azul-oscuro: #1f4a8a;
-  --azul-1: #2f6fae;
-  --azul-2: #3f8fc4;
-  --azul-3: #4fb3d6;
-  --fondo-1: #e8f0f6;
-  --fondo-2: #bad8de;
-  --fondo-3: #c2e6e2;
-  --texto: #24476b;
-  --texto-suave: #5b7891;
-  --borde: #cfe0ea;
+  /* Fondos: del más claro al más hondo */
+  --fondo: #f5f8fb;
+  --fondo-2: #eef3f8;
+  --fondo-3: #eaf1f6;
+  --superficie: #fff;
 
-  --fuente-titulo: 'Fredoka', 'Nunito', sans-serif;
+  /* Texto y bordes */
+  --tinta: #3d5266;
+  --suave: #7a8da0;
+  --borde: #e1e9f0;
 
-  font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--texto-suave);
-  background: var(--fondo-1);
+  /* Acento azul */
+  --primario: #a9c6dc;
+  --primario-hover: #8fb3d1;
+  --acento: #8fb3d1;
+  --sobre-primario: #3d5266;
+
+  --foco: #0b57d0;
+  --ok: #2f8f5b;
+  --medio: #b57a0b;
+  --bajo: #b8402f;
+
+  font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  color: var(--tinta);
+  background: var(--fondo);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modo alto contraste (se activa desde Ajustes) */
+html.contraste {
+  --fondo: #fff;
+  --fondo-2: #f0f0f0;
+  --fondo-3: #e6e6e6;
+  --tinta: #000;
+  --suave: #1a1a1a;
+  --borde: #000;
+  --primario: #00334d;
+  --primario-hover: #001f2e;
+  --acento: #00334d;
+  --sobre-primario: #fff;
 }
 
 * {
@@ -28,14 +54,44 @@
 
 body {
   min-width: 420px;
-  min-height: 10vh;
   margin: 0;
-  padding: 0;
-  background: var(--fondo-1);
+  background: var(--fondo);
+  color: var(--tinta);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+p {
+  max-width: 65ch;
+  margin: 0 0 1rem;
+}
+
+a {
+  color: var(--tinta);
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+/* Foco visible para quien navega con teclado */
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Respetar a quien prefiere menos animación */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }

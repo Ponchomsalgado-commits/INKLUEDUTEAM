@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { obtenerMisActividades, obtenerPlantillas } from '../services/activityService';
-import { mensajeDeError } from "../components/shared/errorHandler";
 import { ICONOS_SKIN } from '../components/shared/iconosSkin';
+import '../styles/editor.css';
 
 // Editor: elegir una plantilla para crear una actividad nueva o seguir editando una propia.
+
+const normalizar = (texto = '') => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export default function Editor() {
   const [plantillas, setPlantillas] = useState([]);
   const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
   const [actividades, setActividades] = useState([]);
   const [cargandoActividades, setCargandoActividades] = useState(true);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     obtenerPlantillas()
@@ -23,73 +26,119 @@ export default function Editor() {
       .finally(() => setCargandoActividades(false));
   }, []);
 
+  const filtro = normalizar(busqueda.trim());
+  const plantillasFiltradas = useMemo(
+    () => plantillas.filter((p) => normalizar(p.displayName).includes(filtro)),
+    [plantillas, filtro],
+  );
+  const actividadesFiltradas = useMemo(
+    () =>
+      actividades.filter(
+        (a) =>
+          normalizar(a.title).includes(filtro) ||
+          normalizar(a.template?.displayName).includes(filtro),
+      ),
+    [actividades, filtro],
+  );
+
   return (
-    <div className="pagina">
-      <div className="pagina-encabezado">
-        <h1>Editor</h1>
-        <p>Elige una plantilla para crear una actividad nueva, o sigue editando una tuya.</p>
+    <div className="editor-pagina">
+      <h1 className="titulo-pagina">Editor</h1>
+
+      <div className="barra">
+        <label htmlFor="editor-buscar" className="solo-lectores">
+          Buscar plantillas y actividades
+        </label>
+        <input
+          id="editor-buscar"
+          type="search"
+          className="buscador"
+          placeholder="Buscar plantillas..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+        {plantillas.length > 0 ? (
+          <Link className="boton" to={`/actividades/nueva?plantilla=${plantillas[0].id}`}>
+            Crear +
+          </Link>
+        ) : (
+          <a className="boton" href="#editor-plantillas">
+            Crear +
+          </a>
+        )}
       </div>
 
-      <section className="panel" aria-labelledby="editor-plantillas">
-        <h2 id="editor-plantillas" className="panel-titulo">
-          Plantillas
-        </h2>
+      <h2 id="editor-plantillas" className="seccion-titulo">
+        Plantillas
+      </h2>
+      <p className="vacio">Elige una plantilla para diseñar una actividad nueva.</p>
 
-        {cargandoPlantillas && <p role="status">Cargando plantillas...</p>}
-        {!cargandoPlantillas && plantillas.length === 0 && (
-          <p className="sin-datos">No hay plantillas aún</p>
-        )}
+      {cargandoPlantillas && <p role="status">Cargando plantillas...</p>}
+      {!cargandoPlantillas && plantillasFiltradas.length === 0 && (
+        <p className="vacio">
+          {filtro ? 'No encontramos esa plantilla.' : 'No hay plantillas aún'}
+        </p>
+      )}
 
-        <ul className="fila-tarjetas">
-          {plantillas.map((p) => (
-            <li key={p.id}>
-              <Link to={`/salones/crear/actividad?plantilla=${p.id}`} className="tarjeta-actividad">
-                <span className="tarjeta-actividad-icono" aria-hidden="true">
-                  {ICONOS_SKIN[p.skin] ?? '🎮'}
-                </span>
-                <strong>{p.displayName}</strong>
-                <small>Usar plantilla</small>
+      <div className="ed-lista" aria-labelledby="editor-plantillas">
+        {plantillasFiltradas.map((p) => (
+          <div key={p.id} className="ed-fila">
+            <span className="ed-fila-icono" aria-hidden="true">
+              {ICONOS_SKIN[p.skin] ?? '🎮'}
+            </span>
+            <div className="ed-fila-info">
+              <strong>{p.displayName}</strong>
+              <small>Abrir en el editor</small>
+            </div>
+            <Link
+              to={`/actividades/nueva?plantilla=${p.id}`}
+              className="boton-icono"
+              aria-label={`Editar la plantilla ${p.displayName}`}
+            >
+              ✏️
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      <h2 id="editor-mias" className="seccion-titulo">
+        Seguir editando
+      </h2>
+
+      {cargandoActividades && <p role="status">Cargando actividades...</p>}
+      {!cargandoActividades && actividadesFiltradas.length === 0 && (
+        <p className="vacio">
+          {filtro ? 'No encontramos esa actividad.' : 'Aún no tienes actividades.'}
+        </p>
+      )}
+
+      <div className="ed-lista" aria-labelledby="editor-mias">
+        {actividadesFiltradas.map((a) => (
+          <div key={a.id} className="ed-fila">
+            <span className="ed-fila-icono" aria-hidden="true">
+              {ICONOS_SKIN[a.template?.skin] ?? '🎮'}
+            </span>
+            <div className="ed-fila-info">
+              <strong>{a.title}</strong>
+              <small>
+                {a.template?.displayName} · {a.mediaCount} {a.mediaCount === 1 ? 'archivo' : 'archivos'}
+              </small>
+            </div>
+            <div className="ed-fila-acciones">
+              <Link to={`/actividades/previa?actividad=${a.id}`} className="boton boton-sec">
+                Previsualizar
               </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="panel" aria-labelledby="editor-mias">
-        <h2 id="editor-mias" className="panel-titulo">
-          Seguir editando
-        </h2>
-
-        {cargandoActividades && <p role="status">Cargando actividades...</p>}
-        {!cargandoActividades && actividades.length === 0 && (
-          <p className="sin-datos">Aún no tienes actividades.</p>
-        )}
-
-        <ul className="lista-filas">
-          {actividades.map((a) => (
-            <li key={a.id} className="fila">
-              <span className="fila-icono" aria-hidden="true">
-                {ICONOS_SKIN[a.template?.skin] ?? '🎮'}
-              </span>
-              <div className="fila-info">
-                <strong>{a.title}</strong>
-                <small>
-                  {a.template?.displayName} · {a.mediaCount}{' '}
-                  {a.mediaCount === 1 ? 'archivo' : 'archivos'}
-                </small>
-              </div>
-              <div className="fila-acciones">
-                <Link to={`/actividades/editar?actividad=${a.id}`} className="plantilla-usar">
-                  Editar
-                </Link>
-                <Link to={`/actividades/previa?actividad=${a.id}`} className="plantilla-usar">
-                  Previsualizar
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+              <Link
+                to={`/actividades/editar?actividad=${a.id}`}
+                className="boton-icono"
+                aria-label={`Editar ${a.title}`}
+              >
+                ✏️
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

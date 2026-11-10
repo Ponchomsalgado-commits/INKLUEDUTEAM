@@ -1,0 +1,176 @@
+/* ===== Galería (boceto galeria.html) ===== */
+.galeria-pagina {
+  width: 100%;
+  max-width: 1250px;
+}
+
+.galeria-pagina .buscador {
+  min-width: 0;
+  flex: 1;
+  padding: 0.65rem 1.2rem;
+  border: 2px solid var(--borde);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+}
+
+.galeria-pagina .buscador:focus {
+  border-color: var(--primario);
+  box-shadow: none;
+}
+
+.galeria-pagina .barra .boton {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+}
+
+.galeria-pagina .filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.galeria-pagina .fila-scroll {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.galeria-pagina .actividad {
+  display: flex;
+  height: 140px;
+  flex: 0 0 190px;
+  align-items: flex-end;
+  padding: 1rem;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.galeria-pagina .actividad:nth-child(5n + 1) {
+  background: #1b7f8c;
+}
+
+.galeria-pagina .actividad:nth-child(5n + 2) {
+  background: #6a4fb0;
+}
+
+.galeria-pagina .actividad:nth-child(5n + 3) {
+  background: #2f7d3a;
+}
+
+.galeria-pagina .actividad:nth-child(5n + 4) {
+  background: #b5651d;
+}
+
+.galeria-pagina .actividad:nth-child(5n + 5) {
+  background: #a0345a;
+}
+
+.galeria-pagina .archivos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.galeria-pagina .archivo {
+  display: flex;
+  min-height: 110px;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.galeria-pagina .archivo:hover {
+  border-color: var(--primario);
+}
+
+.galeria-pagina .tipo {
+  align-self: flex-start;
+  padding: 0.15rem 0.6rem;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.galeria-pagina .tipo-lectura {
+  background: #b8402f;
+}
+
+.galeria-pagina .tipo-video {
+  background: #6a4fb0;
+}
+
+.galeria-pagina .tipo-audio {
+  background: #2b64b8;
+}
+
+.galeria-pagina .archivo .nombre {
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+/* Ventana de vista previa (el dialog queda fuera del flujo, pero dentro del wrapper) */
+.galeria-pagina .vista-previa {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: 2px dashed var(--borde);
+  border-radius: 12px;
+  background: var(--fondo-3);
+  box-shadow: none;
+  font-size: 4rem;
+}
+
+.galeria-pagina .vista-previa img,
+.galeria-pagina .vista-previa video {
+  max-width: 100%;
+  max-height: 60vh;
+}
+
+.galeria-pagina .vista-previa small {
+  color: var(--suave);
+  font-size: 1rem;
+}
+
+.galeria-pagina .vista-detalle {
+  margin: 0.75rem 0 0;
+  color: var(--suave);
+}
+
+/* Ventana "Subir archivos" */
+.galeria-pagina .galeria-subir .dialogo-cuerpo {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.galeria-pagina .galeria-subir .mat {
+  margin: 0;
+}
+
+.galeria-pagina .galeria-subir .mat-lista {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.galeria-pagina .galeria-subir .boton {
+  justify-self: end;
+}

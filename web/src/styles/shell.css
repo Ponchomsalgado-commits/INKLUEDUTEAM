@@ -1,0 +1,129 @@
+/* ===== Estructura de la app: encabezado, menú lateral y contenido ===== */
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  background: var(--fondo);
+}
+
+.encabezado {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  border-bottom: 2px solid var(--tinta);
+  background: #fff;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--tinta);
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.encabezado-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cuerpo {
+  display: flex;
+  min-height: calc(100vh - 64px);
+  flex: 1;
+}
+
+.contenido {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2rem;
+}
+
+.con-sesion .contenido {
+  align-items: stretch;
+}
+
+/* texto solo para lectores de pantalla */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.menu {
+  display: flex;
+  width: 200px;
+  flex: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
+  border-right: 1px solid var(--borde);
+  background: #fff;
+  transition: width 0.2s;
+}
+
+.menu.cerrado {
+  width: 72px;
+}
+
+.menu.cerrado .texto {
+  display: none;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  color: var(--tinta);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.menu a:hover {
+  background: var(--fondo-2);
+}
+
+.menu a[aria-current='page'] {
+  background: var(--primario);
+  color: var(--sobre-primario);
+}
+
+.menu .icono {
+  width: 1.5rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.menu-toggle {
+  align-self: flex-end;
+  width: 40px;
+  height: 40px;
+  margin-top: auto;
+  border: 1px solid var(--borde);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .contenido {
+    padding: 1rem;
+  }
+}

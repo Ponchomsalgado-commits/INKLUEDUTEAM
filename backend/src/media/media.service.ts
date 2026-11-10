@@ -2,6 +2,7 @@ import {
   CreateBucketCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -21,6 +22,7 @@ import {
   displayNameFromKey,
   isOwnedKey,
   maxBytesFrom,
+  ownedPrefix,
   validateUpload,
 } from './media.rules';
 
@@ -30,6 +32,11 @@ export interface MediaReference {
   contentType: string;
   url: string;
   expiresIn: number;
+}
+
+export interface StoredMedia extends MediaReference {
+  size: number;
+  lastModified: string | null;
 }
 
 /**
@@ -91,6 +98,45 @@ export class MediaService {
     }
 
     return { ...(await this.describe(key)), size: valido.size };
+  }
+
+  /** Todo el material que subió el profesor (más reciente primero), con URL firmada. */
+  async list(teacherId: string): Promise<StoredMedia[]> {
+    const objetos: { key: string; size: number; lastModified?: Date }[] = [];
+
+    try {
+      await this.asegurarBucket();
+      let token: string | undefined;
+      do {
+        const pagina = await this.internal.send(
+          new ListObjectsV2Command({
+            Bucket: this.bucket,
+            Prefix: ownedPrefix(teacherId),
+            ContinuationToken: token,
+          }),
+        );
+        for (const o of pagina.Contents ?? []) {
+          if (o.Key && isOwnedKey(teacherId, o.Key)) {
+            objetos.push({ key: o.Key, size: o.Size ?? 0, lastModified: o.LastModified });
+          }
+        }
+        token = pagina.IsTruncated ? pagina.NextContinuationToken : undefined;
+      } while (token);
+    } catch (error) {
+      this.logger.error(`No se pudo listar MinIO: ${(error as Error).message}`);
+      throw new ServiceUnavailableException(
+        'No se pudo leer tu material en este momento. Intenta de nuevo.',
+      );
+    }
+
+    objetos.sort((a, b) => (b.lastModified?.getTime() ?? 0) - (a.lastModified?.getTime() ?? 0));
+    return Promise.all(
+      objetos.map(async (o) => ({
+        ...(await this.describe(o.key)),
+        size: o.size,
+        lastModified: o.lastModified?.toISOString() ?? null,
+      })),
+    );
   }
 
   /** Referencia con URL firmada. La usan Activities (profesor) y, en el Sprint 4, /activities/:id/play. (CLAUDE)*/
