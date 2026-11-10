@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { mensajeDeError } from "../components/shared/errorHandler";
 import { obtenerMisSalones, obtenerMiembros } from "../services/classroomService";
 
-// T2101: Pantalla "Mis salones": ver código y lista de usuarios unidos.
-// Crear un salón se hace en su propia pantalla (/salones/crear).
+// T2101: Pantalla "Grupos": salones de tipo GRUPO, su código y la lista de usuarios unidos.
+// Los salones individuales están en /individual. Crear un salón se hace en /salones/crear.
 
-export default function MisSalones() {
+export default function Grupos() {
   const [salones, setSalones] = useState([]);
   const [cargandoSalones, setCargandoSalones] = useState(true);
 
@@ -19,8 +20,9 @@ export default function MisSalones() {
   useEffect(() => {
     obtenerMisSalones()
      .then((data) => {
-      // Solo aceptamos arreglos; si no, usamos lista vacía
-      setSalones(Array.isArray(data) ? data : []);
+      // Solo aceptamos arreglos y nos quedamos con los grupos
+      const lista = Array.isArray(data) ? data : [];
+      setSalones(lista.filter((s) => s.type === "GRUPO"));
     })
       // Si la lista no se puede cargar se muestra como vacía en vez del error
       .catch(() => setSalones([]))
@@ -59,18 +61,23 @@ export default function MisSalones() {
   };
 
   return (
-    <div className="tarjeta salones-container salones-ancho">
-      <section aria-labelledby="lista-salones" className="seccion-salones">
+    <div className="pagina salones-container salones-ancho">
+      <div className="pagina-encabezado">
+        <h1>Grupos</h1>
+        <p>Tus salones grupales, su código para unirse y los alumnos inscritos.</p>
+      </div>
+
+      <section aria-labelledby="lista-salones" className="panel seccion-salones">
         <div className="encabezado-seccion">
-          <h2 id="lista-salones">Tus salones</h2>
+          <h2 id="lista-salones" className="panel-titulo">Tus grupos</h2>
           <Link to="/salones/crear" className="btn-crear">
-            + Crear salón
+            + Crear grupo
           </Link>
         </div>
 
-        {cargandoSalones && <p role="status">Cargando salones...</p>}
+        {cargandoSalones && <p role="status">Cargando grupos...</p>}
         {!cargandoSalones && salones.length === 0 && (
-          <p className="sin-datos">No hay salones aún</p>
+          <p className="sin-datos">No hay grupos aún</p>
         )}
 
         <ul className="lista-salones">
@@ -78,9 +85,7 @@ export default function MisSalones() {
             <li key={salon.id} className="salon-card">
               <div className="salon-info">
                 <strong>{salon.name}</strong>
-                <span className="salon-tipo">
-                  {salon.type === "GRUPO" ? "Grupo" : "Individual"}
-                </span>
+                <span className="salon-tipo">Grupo</span>
               </div>
 
               <div className="salon-codigo">

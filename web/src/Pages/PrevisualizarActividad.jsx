@@ -22,8 +22,8 @@ export default function PrevisualizarActividad() {
   }, [actividadId]);
 
   const enlaceVolver = (
-    <Link to="/actividades" className="enlace-volver">
-      ← Volver a Mis actividades
+    <Link to="/galeria" className="enlace-volver">
+      ← Volver a la Galería
     </Link>
   );
 

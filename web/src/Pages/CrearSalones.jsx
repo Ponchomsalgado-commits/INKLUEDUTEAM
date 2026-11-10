@@ -64,8 +64,8 @@ const [cargandoPlantillas, setCargandoPlantillas] = useState(true);
 
   return (
     <div className="tarjeta salones-container salones-ancho">
-      <Link to="/salones" className="enlace-volver">
-        ← Volver a Mis salones
+      <Link to="/grupos" className="enlace-volver">
+        ← Volver a Grupos
       </Link>
 
       <form className="crear-salon crear-salon-horizontal seccion-salones" onSubmit={handleCrear}>

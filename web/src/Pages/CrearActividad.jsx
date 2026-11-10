@@ -132,12 +132,12 @@ export default function CrearActividad() {
   const idActividad = esEdicion ? actividadId : actividadCreada?.id;
 
   const enlaceVolver = esEdicion ? (
-    <Link to="/actividades" className="enlace-volver">
-      ← Volver a Mis actividades
+    <Link to="/editor" className="enlace-volver">
+      ← Volver al Editor
     </Link>
   ) : (
-    <Link to="/salones/crear" className="enlace-volver">
-      ← Volver a Crear salón
+    <Link to="/editor" className="enlace-volver">
+      ← Volver al Editor
     </Link>
   );
 
@@ -214,7 +214,7 @@ export default function CrearActividad() {
         {resultado && (
           <p role="status">
             Actividad "{resultado.titulo}" {resultado.mensaje}.{" "}
-            <Link to="/actividades">Ver mis actividades</Link>
+            <Link to="/galeria">Ver en la Galería</Link>
           </p>
         )}
 

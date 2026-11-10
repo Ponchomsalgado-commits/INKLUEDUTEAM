@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
 import { crearSalon, obtenerMisSalones, obtenerMiembros } from '../services/classroomService';
 import { mensajeDeError } from '../components/shared/errorHandler';
 
-// Tutorías individuales: crear tutoría (salón INDIVIDUAL), ver su código de 5 caracteres
+// Individual (tutorías): crear tutoría (salón INDIVIDUAL), ver su código de 5 caracteres
 // y ver el perfil del UsuarioA unido.
 
 
@@ -11,7 +10,7 @@ function formatearFecha(fecha) {
   return fecha ? new Date(fecha).toLocaleDateString() : '—';
 }
 
-export default function Tutorias() {
+export default function Individual() {
   const [tutorias, setTutorias] = useState([]);
   const [cargandoTutorias, setCargandoTutorias] = useState(true);
 
@@ -96,13 +95,15 @@ export default function Tutorias() {
   );
 
   return (
-    <div className="tarjeta salones-container salones-ancho">
-      <section aria-labelledby="lista-tutorias" className="seccion-salones">
+    <div className="pagina salones-container salones-ancho">
+      <div className="pagina-encabezado">
+        <h1>Individual</h1>
+        <p>Tutorías uno a uno: cada una tiene su código para que se una un solo alumno.</p>
+      </div>
+
+      <section aria-labelledby="lista-tutorias" className="panel seccion-salones">
         <div className="encabezado-seccion">
-          <h2 id="lista-tutorias">Tus tutorías</h2>
-          <Link to="/salones/crear" className="btn-crear">
-            + Crear salón
-          </Link>
+          <h2 id="lista-tutorias" className="panel-titulo">Tus tutorías</h2>
         </div>
 
         {cargandoTutorias && <p role="status">Cargando tutorías...</p>}
@@ -170,7 +171,7 @@ export default function Tutorias() {
         </ul>
       </section>
 
-      <form className="crear-salon crear-salon-horizontal" onSubmit={handleCrear}>
+      <form className="panel crear-salon crear-salon-horizontal" onSubmit={handleCrear}>
         <h3>Crear tutoría individual</h3>
         <div className="crear-salon-campos campos-dos">
           <div className="form-group">
