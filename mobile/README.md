@@ -51,3 +51,6 @@ Flutter regenera esos archivos en cada build y en Windows solo cambian los salto
 ```bash
 git restore linux/flutter macos/Flutter
 ```
+
+dependencias
+flutter pub add connectivity_plus

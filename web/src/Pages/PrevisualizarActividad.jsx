@@ -9,7 +9,7 @@ export default function PrevisualizarActividad() {
   const [params] = useSearchParams();
   const actividadId = params.get("actividad");
   const [actividad, setActividad] = useState(null);
-  // Sin ?actividad= no hay nada que cargar: se muestra "No encontramos esa actividad" directo
+  // Sin ID no hay nada que cargar: se arranca ya en "no cargando" en vez de cambiarlo dentro del efecto.
   const [cargando, setCargando] = useState(Boolean(actividadId));
 
   useEffect(() => {

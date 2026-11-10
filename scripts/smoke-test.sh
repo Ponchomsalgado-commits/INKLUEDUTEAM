@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prueba de humo de la API: recorre los flujos de los Sprints 1, 2 y 3 contra un backend en marcha.
+# Prueba de humo de la API: recorre los flujos de los Sprints 1 a 4 contra un backend en marcha.
 # Uso (Git Bash en Windows, o cualquier shell con curl):
 #   ./scripts/smoke-test.sh                          # desarrollo: http://localhost:3000
 #   ./scripts/smoke-test.sh http://mi-servidor       # servidor (a través de Nginx)
@@ -132,6 +132,25 @@ verificar "tipo no permitido (.exe) rechazado" 415 "$(subir "$ARCHIVO_EXE" appli
 
 verificar "actividad con material propio" 201 "$(peticion POST /activities "{\"templateId\":\"$PLANTILLA\",\"title\":\"Con material\",\"contentJson\":$CONTENIDO,\"mediaUrls\":[\"$CLAVE\"]}" "$PROF")"
 verificar "material de otro profesor rechazado" 400 "$(peticion POST /activities "{\"templateId\":\"$PLANTILLA\",\"title\":\"Ajena\",\"contentJson\":$CONTENIDO,\"mediaUrls\":[\"media/otro-profe/archivo.txt\"]}" "$PROF")"
+
+# Sprint 4: jugar la actividad y enviar el intento
+r=$(peticion GET /activities/$ACT/play "" "$ALU")
+verificar "estudiante obtiene la actividad para jugar" 200 "$r"
+echo "${r#*|}" | grep -q '"correcta"' && { echo "  FALLA /play expone la respuesta correcta"; FALLOS=$((FALLOS + 1)); }
+PREGUNTA=$(campo "$r" id)
+verificar "profesor no usa /play" 403 "$(peticion GET /activities/$ACT/play "" "$PROF")"
+
+INTENTO="00000000-0000-4000-8000-$(printf '%012d' "$STAMP")"
+ENVIO="{\"activityId\":\"$ACT\",\"respuestas\":[{\"preguntaId\":\"$PREGUNTA\",\"opcionId\":1}],\"attemptId\":\"$INTENTO\"}"
+r=$(peticion POST /progress "$ENVIO" "$ALU")
+verificar "estudiante envía su intento" 201 "$r"
+echo "${r#*|}" | grep -q '"score":1' || { echo "  FALLA el score del intento no es 1"; FALLOS=$((FALLOS + 1)); }
+PROGRESO=$(campo "$r" id)
+r=$(peticion POST /progress "$ENVIO" "$ALU")
+verificar "reintento con el mismo attemptId" 201 "$r"
+[ "$(campo "$r" id)" = "$PROGRESO" ] || { echo "  FALLA el reintento duplicó el intento"; FALLOS=$((FALLOS + 1)); }
+verificar "opción inexistente rechazada" 400 "$(peticion POST /progress "{\"activityId\":\"$ACT\",\"respuestas\":[{\"preguntaId\":\"$PREGUNTA\",\"opcionId\":9}]}" "$ALU")"
+verificar "profesor no envía intentos" 403 "$(peticion POST /progress "$ENVIO" "$PROF")"
 
 echo
 if [ "$FALLOS" -eq 0 ]; then
