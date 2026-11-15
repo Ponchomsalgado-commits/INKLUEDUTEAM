@@ -7,6 +7,10 @@ export default defineConfig({
   // Un solo .env para todo el monorepo: se lee el de la raíz
   envDir: '..',
   server: {
+    // Escuchar en todas las interfaces para que otras PCs de la red local puedan entrar
+    host: true,
+    port: 5173,
+    strictPort: true,
     // En desarrollo, /api se reenvía al backend (en servidor lo hace Nginx, ver nginx.conf)
     proxy: {
       '/api': {

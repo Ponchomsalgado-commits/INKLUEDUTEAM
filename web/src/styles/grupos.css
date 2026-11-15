@@ -1,0 +1,331 @@
+/* Grupos y Crear salón (boceto grupos.html / clase.html) */
+.gr-pagina {
+  max-width: none;
+  padding: 0;
+}
+
+.gr-pagina ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gr-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.gr-cab .titulo-pagina {
+  margin: 0;
+}
+
+.gr-sub {
+  color: var(--suave);
+  margin: 0 0 1.25rem;
+}
+
+.gr-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* Rejilla de tarjetas de clase */
+.gr-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.gr-item {
+  min-width: 0;
+}
+
+.gr-tarjeta {
+  display: flex;
+  min-height: 200px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  overflow: hidden;
+  color: var(--tinta);
+}
+
+.gr-tarjeta:hover {
+  border-color: var(--tinta);
+}
+
+.gr-lado {
+  width: 35%;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #fff;
+}
+
+.gr-info {
+  padding: 1.25rem;
+  min-width: 0;
+}
+
+.gr-info h3 {
+  font-size: 1.3rem;
+  overflow-wrap: anywhere;
+}
+
+.gr-info p {
+  margin: 0 0 0.25rem;
+  color: var(--suave);
+}
+
+.gr-info .gr-codigo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.gr-info .gr-codigo strong {
+  color: var(--tinta);
+}
+
+.gr-miembros-boton {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.9rem;
+}
+
+/* Alumnos unidos */
+.gr-miembros {
+  margin-top: 0.5rem;
+}
+
+.gr-alumnos {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.gr-alumno {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  overflow-wrap: anywhere;
+}
+
+.gr-alumno small {
+  margin-left: auto;
+  color: var(--suave);
+  text-align: right;
+}
+
+.gr-avatar {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--primario);
+  color: var(--sobre-primario);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Crear salón */
+.gr-pagina .gr-form {
+  max-width: 560px;
+  margin-bottom: 1.5rem;
+}
+
+.gr-form .boton {
+  width: 100%;
+}
+
+.gr-form .boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gr-nuevo {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: var(--fondo-2);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+
+.gr-nuevo h3 {
+  font-size: 1.1rem;
+}
+
+.gr-nuevo .gr-codigo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gr-codigo-grande {
+  font-size: 1.6rem;
+  letter-spacing: 0.1em;
+}
+
+/* Catálogo de plantillas */
+.gr-plantillas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.gr-plantilla {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.gr-plantilla:hover {
+  border-color: var(--primario);
+}
+
+.gr-plantilla-icono {
+  font-size: 2rem;
+}
+
+.gr-plantilla small {
+  color: var(--suave);
+}
+
+.gr-campos {
+  color: var(--suave);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.gr-plantilla .boton {
+  margin-top: auto;
+  text-align: center;
+}
+
+/* Acciones de la tarjeta y enlace al salón */
+.gr-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gr-enlace-salon {
+  color: inherit;
+  text-decoration: none;
+}
+
+.gr-enlace-salon:hover {
+  text-decoration: underline;
+}
+
+/* Detalle del salón (clase.html) */
+.gr-pagina .pestanas {
+  margin-bottom: 1rem;
+}
+
+.gr-banner {
+  min-height: 110px;
+  display: flex;
+  align-items: flex-end;
+  padding: 1.25rem 1.5rem;
+  border-radius: 14px 14px 0 0;
+  color: #fff;
+}
+
+.gr-banner h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  overflow-wrap: anywhere;
+}
+
+.gr-info-clase {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+}
+
+.gr-info-clase small {
+  display: block;
+  color: var(--suave);
+}
+
+.gr-info-clase strong {
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+
+.gr-pagina .gr-form textarea {
+  resize: vertical;
+}
+
+@media (max-width: 700px) {
+  .gr-cab {
+    flex-wrap: wrap;
+  }
+
+  .gr-tarjeta {
+    flex-direction: column;
+  }
+
+  .gr-lado {
+    width: auto;
+    height: 90px;
+  }
+}
+
+/* Formulario de actividad del salón: regla plantilla-o-material y acciones */
+.gr-pagina .gr-regla {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--fondo-2);
+  color: var(--suave);
+  font-size: 0.95rem;
+}
+
+.gr-pagina .gr-regla.pendiente {
+  color: var(--tinta);
+}
+
+.gr-pagina .gr-acciones-plantilla {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.gr-pagina .gr-nota {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--suave);
+}
+
+.gr-form .gr-acciones-plantilla .boton {
+  width: auto;
+}

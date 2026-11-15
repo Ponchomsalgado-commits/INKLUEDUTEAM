@@ -1,13 +1,15 @@
-import { useRef, useState } from "react";
-import { subirMaterial } from "../services/mediaService";
-import { mensajeDeError } from "./shared/errorHandler";
+import { useRef, useState } from 'react';
+import { subirMaterial } from '../services/mediaService';
+import { mensajeDeError } from './shared/errorHandler';
 import {
   FORMATOS_PERMITIDOS,
   ICONOS_MATERIAL,
   formatearTamano,
   formatoPermitido,
   tipoDeMaterial,
-} from "./shared/materialUtils";
+} from './shared/materialUtils';
+import ElegirMaterialGaleria from './ElegirMaterialGaleria';
+import '../styles/material.css';
 
 // Zona de arrastrar y soltar para el material didáctico de una actividad.
 // Cada archivo se sube en cuanto se suelta; la actividad solo guarda las claves (key) de los que quedaron listos.
@@ -15,13 +17,25 @@ import {
 // onChange recibe una función (lista) => nuevaLista, porque varias subidas terminan a la vez.
 
 // Formatos: los mismos que el backend (FORMATOS_PERMITIDOS). El backend vuelve a validar tipo y tamaño.
-const ACCEPT = FORMATOS_PERMITIDOS.map((f) => `.${f}`).join(",");
-const FORMATOS_TEXTO = FORMATOS_PERMITIDOS.map((f) => f.toUpperCase()).join(", ");
+const ACCEPT = FORMATOS_PERMITIDOS.map((f) => `.${f}`).join(',');
+const FORMATOS_TEXTO = FORMATOS_PERMITIDOS.map((f) => f.toUpperCase()).join(', ');
 const TAMANO_MAXIMO_MB = 50;
 const MAXIMO_ARCHIVOS = 5;
 
-export default function SubirMaterial({ materiales, onChange }) {
+// Props opcionales (la Galería las usa; CrearActividad no pasa ninguna y todo queda igual):
+// titulo: texto del encabezado; maximo: tope de archivos en la lista (Infinity = sin tope);
+// onSubido: se llama con { key, name, url, size } cuando un archivo termina de subir;
+// galeria: agrega la opción "Elegir de mi galería" junto a "Subir archivo" (ambas llenan la misma lista).
+export default function SubirMaterial({
+  materiales,
+  onChange,
+  titulo = 'Material didáctico (opcional)',
+  maximo = MAXIMO_ARCHIVOS,
+  onSubido,
+  galeria = false,
+}) {
   const inputRef = useRef(null);
+  const [fuente, setFuente] = useState('subir');
   const [arrastrando, setArrastrando] = useState(false);
   const [avisos, setAvisos] = useState([]);
 
@@ -29,19 +43,25 @@ export default function SubirMaterial({ materiales, onChange }) {
     onChange((lista) => lista.map((m) => (m.id === id ? { ...m, ...cambios } : m)));
 
   const subir = async (material) => {
-    actualizar(material.id, { estado: "subiendo", progreso: 0, error: "" });
+    actualizar(material.id, { estado: 'subiendo', progreso: 0, error: '' });
     try {
-      const { key, url } = await subirMaterial(material.archivo, (progreso) => actualizar(material.id, { progreso }));
-      actualizar(material.id, { estado: "listo", key, url });
+      const subido = await subirMaterial(material.archivo, (progreso) =>
+        actualizar(material.id, { progreso }),
+      );
+      actualizar(material.id, { estado: 'listo', key: subido.key, url: subido.url });
+      onSubido?.(subido);
     } catch (err) {
-      actualizar(material.id, { estado: "error", error: mensajeDeError(err, "No se pudo subir el archivo") });
+      actualizar(material.id, {
+        estado: 'error',
+        error: mensajeDeError(err, 'No se pudo subir el archivo'),
+      });
     }
   };
 
   const agregarArchivos = (archivos) => {
     const rechazos = [];
     const nuevos = [];
-    let espacio = MAXIMO_ARCHIVOS - materiales.length;
+    let espacio = maximo - materiales.length;
 
     for (const archivo of archivos) {
       if (!formatoPermitido(archivo.name)) {
@@ -49,7 +69,7 @@ export default function SubirMaterial({ materiales, onChange }) {
       } else if (archivo.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
         rechazos.push(`"${archivo.name}" pesa más de ${TAMANO_MAXIMO_MB} MB.`);
       } else if (espacio <= 0) {
-        rechazos.push(`"${archivo.name}" no se agregó: máximo ${MAXIMO_ARCHIVOS} archivos por actividad.`);
+        rechazos.push(`"${archivo.name}" no se agregó: máximo ${maximo} archivos.`);
       } else {
         espacio -= 1;
         nuevos.push({
@@ -57,7 +77,7 @@ export default function SubirMaterial({ materiales, onChange }) {
           nombre: archivo.name,
           tamano: archivo.size,
           tipo: tipoDeMaterial(archivo.name),
-          estado: "subiendo",
+          estado: 'subiendo',
           progreso: 0,
           archivo,
         });
@@ -86,50 +106,75 @@ export default function SubirMaterial({ materiales, onChange }) {
   const quitar = (id) => onChange((lista) => lista.filter((m) => m.id !== id));
 
   return (
-    <div className="form-group subir-material">
-      <span className="subir-material-titulo">Material didáctico (opcional)</span>
+    <div className="campo-bloque mat">
+      <span className="mat-titulo">{titulo}</span>
 
-      <div
-        className={`zona-material${arrastrando ? " arrastrando" : ""}`}
-        role="button"
-        tabIndex={0}
-        aria-label="Agregar material didáctico: arrastra archivos aquí o presiona para elegirlos"
-        onClick={abrirSelector}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            abrirSelector();
-          }
-        }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setArrastrando(true);
-        }}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <span className="zona-material-icono" aria-hidden="true">
-          📂
-        </span>
-        <strong>{arrastrando ? "Suelta los archivos aquí" : "Arrastra tus archivos aquí"}</strong>
-        <span>
-          o haz clic para elegirlos · {FORMATOS_TEXTO} · hasta {TAMANO_MAXIMO_MB} MB cada uno
-        </span>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPT}
-          multiple
-          hidden
-          onChange={(e) => {
-            agregarArchivos(e.target.files);
-            e.target.value = ""; // permite volver a elegir el mismo archivo
+      {galeria && (
+        <div className="mat-fuentes" role="group" aria-label="De dónde tomar el material">
+          <button
+            type="button"
+            className="mat-fuente"
+            aria-pressed={fuente === 'subir'}
+            onClick={() => setFuente('subir')}
+          >
+            Subir archivo
+          </button>
+          <button
+            type="button"
+            className="mat-fuente"
+            aria-pressed={fuente === 'galeria'}
+            onClick={() => setFuente('galeria')}
+          >
+            Elegir de mi galería
+          </button>
+        </div>
+      )}
+
+      {galeria && fuente === 'galeria' ? (
+        <ElegirMaterialGaleria materiales={materiales} onChange={onChange} maximo={maximo} />
+      ) : (
+        <div
+          className={`mat-zona${arrastrando ? ' arrastrando' : ''}`}
+          role="button"
+          tabIndex={0}
+          aria-label="Agregar material didáctico: arrastra archivos aquí o presiona para elegirlos"
+          onClick={abrirSelector}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              abrirSelector();
+            }
           }}
-        />
-      </div>
+          onDragOver={(e) => {
+            e.preventDefault();
+            setArrastrando(true);
+          }}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <span className="mat-zona-icono" aria-hidden="true">
+            📂
+          </span>
+          <strong>{arrastrando ? 'Suelta los archivos aquí' : 'Arrastra tus archivos aquí'}</strong>
+          <span>
+            o haz clic para elegirlos · {FORMATOS_TEXTO} · hasta {TAMANO_MAXIMO_MB} MB cada uno
+          </span>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={ACCEPT}
+            multiple
+            hidden
+            onChange={(e) => {
+              agregarArchivos(e.target.files);
+              e.target.value = ''; // permite volver a elegir el mismo archivo
+            }}
+          />
+        </div>
+      )}
 
       {avisos.length > 0 && (
-        <ul className="material-avisos" role="alert">
+        <ul className="mat-avisos" role="alert">
           {avisos.map((aviso) => (
             <li key={aviso}>{aviso}</li>
           ))}
@@ -137,32 +182,36 @@ export default function SubirMaterial({ materiales, onChange }) {
       )}
 
       {materiales.length > 0 && (
-        <ul className="lista-material">
+        <ul className="mat-lista">
           {materiales.map((m) => (
-            <li key={m.id} className={`material-item material-${m.estado}`}>
-              <span className="material-icono" aria-hidden="true">
+            <li key={m.id} className={`mat-item mat-${m.estado}`}>
+              <span className="mat-icono" aria-hidden="true">
                 {ICONOS_MATERIAL[m.tipo]}
               </span>
-              <div className="material-info">
+              <div className="mat-info">
                 <strong>{m.nombre}</strong>
                 <small>
                   {m.tamano != null && `${formatearTamano(m.tamano)} · `}
-                  {m.estado === "subiendo" && `Subiendo ${m.progreso ?? 0}%`}
-                  {m.estado === "listo" && "Listo"}
-                  {m.estado === "error" && m.error}
+                  {m.estado === 'subiendo' && `Subiendo ${m.progreso ?? 0}%`}
+                  {m.estado === 'listo' && 'Listo'}
+                  {m.estado === 'error' && m.error}
                 </small>
-                {m.estado === "subiendo" && (
-                  <progress value={m.progreso ?? 0} max={100} aria-label={`Progreso de ${m.nombre}`} />
+                {m.estado === 'subiendo' && (
+                  <progress
+                    value={m.progreso ?? 0}
+                    max={100}
+                    aria-label={`Progreso de ${m.nombre}`}
+                  />
                 )}
               </div>
-              {m.estado === "error" && m.archivo && (
-                <button type="button" className="btn-secundario" onClick={() => subir(m)}>
+              {m.estado === 'error' && m.archivo && (
+                <button type="button" className="boton-chico" onClick={() => subir(m)}>
                   Reintentar
                 </button>
               )}
               <button
                 type="button"
-                className="btn-secundario"
+                className="boton-chico"
                 onClick={() => quitar(m.id)}
                 aria-label={`Quitar ${m.nombre}`}
               >

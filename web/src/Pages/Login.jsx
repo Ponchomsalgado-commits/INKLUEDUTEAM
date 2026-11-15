@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { login } from '../auth/authService';
+import { Link } from 'react-router';
+import { useAuth } from '../auth/authContext';
+import '../styles/publico.css';
 
 export default function Login() {
+  const { iniciarSesion } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState('');
@@ -15,10 +18,9 @@ export default function Login() {
     setCargando(true);
 
     try {
-      await login(email, password);
+      // Al marcar la sesión, RutaPublica redirige sola (a Mis salones o a la página pedida antes)
+      await iniciarSesion(email, password);
       setMensaje('Inicio de sesión correcto');
-      // Recargar la página es seguro: apiClient renueva el access_token con el refresh_token
-      window.location.assign('/salones');
     } catch (error) {
       setEsError(true);
       if (error.code === 'ROL_NO_PERMITIDO') {
@@ -34,47 +36,89 @@ export default function Login() {
   };
 
   return (
-    <section className="tarjeta auth-card">
-      <h2>¡Hola! ¿Listo para aprender?</h2>
-      <p className="auth-subtitulo">Inicia sesión para continuar</p>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="login-email">Correo electrónico</label>
-          <input
-            id="login-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="tucorreo@escuela.mx"
-            autoComplete="email"
-            required
-          />
+    <div className="pub-auth">
+      <div className="pub-auth-form">
+        <section className="pub-tarjeta">
+          <h1>Iniciar sesión</h1>
+
+          <form onSubmit={handleSubmit}>
+            <div className="pub-campo-icono">
+              <div className="pub-icono-caja" aria-hidden="true">
+                ✉️
+              </div>
+              <label className="campo">
+                <span>Correo electrónico</span>
+                <input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nombre@correo.com"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="pub-campo-icono">
+              <div className="pub-icono-caja" aria-hidden="true">
+                🔒
+              </div>
+              <label className="campo">
+                <span>Contraseña</span>
+                <input
+                  id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Tu contraseña"
+                  autoComplete="current-password"
+                  required
+                />
+              </label>
+            </div>
+
+            <p role="status" className={`pub-mensaje ${esError ? 'error' : 'exito'}`}>
+              {mensaje}
+            </p>
+            <button type="submit" className="boton" disabled={cargando}>
+              {cargando ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <hr className="pub-separador" />
+
+          <div className="pub-social">
+            {['Google', 'Apple'].map((servicio) => (
+              <button
+                key={servicio}
+                type="button"
+                className="boton boton-sec"
+                onClick={() => {
+                  setEsError(true);
+                  setMensaje(`Entrar con ${servicio} estará disponible pronto.`);
+                }}
+              >
+                Continuar con {servicio}
+              </button>
+            ))}
+          </div>
+
+          <p className="pub-enlace-pie">
+            ¿No tienes cuenta? <Link to="/register">Crea una aquí</Link>
+          </p>
+          <p className="pub-enlace-pie">
+            <Link to="/">Volver al inicio</Link>
+          </p>
+        </section>
+      </div>
+
+      <div className="pub-deco">
+        <div className="pub-animales" aria-hidden="true">
+          🐸🦋🐝🐱
         </div>
-        <div className="form-group">
-          <label htmlFor="login-password">Contraseña</label>
-          <input
-            id="login-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Tu contraseña"
-            autoComplete="current-password"
-            required
-          />
-        </div>
-        <button type="submit" className="btn-principal" disabled={cargando}>
-          <span aria-hidden="true">✏️</span>
-          {cargando ? 'Entrando...' : 'Entrar'}
-        </button>
-      </form>
-      {mensaje && (
-        <p role="status" className={esError ? 'mensaje mensaje-error' : 'mensaje mensaje-ok'}>
-          {mensaje}
-        </p>
-      )}
-      <p className="auth-cambio">
-        ¿No tienes cuenta? <a href="/register">Regístrate</a>
-      </p>
-    </section>
+        <p>Aprender se siente mejor cuando todo es claro.</p>
+      </div>
+    </div>
   );
 }

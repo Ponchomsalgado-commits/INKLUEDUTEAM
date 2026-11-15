@@ -122,12 +122,12 @@ export default function DetalleSalon() {
   };
 
   const volver = desde ? (
-    <a href="/tutorias" className="enlace-volver">
-      ← Volver a Tutorías
+    <a href="/individual" className="enlace-volver">
+      ← Volver a Individual
     </a>
   ) : (
-    <a href="/salones" className="enlace-volver">
-      ← Volver a Mis salones
+    <a href="/grupos" className="enlace-volver">
+      ← Volver a Grupos
     </a>
   );
 

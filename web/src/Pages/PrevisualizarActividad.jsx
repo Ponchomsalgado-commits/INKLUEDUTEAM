@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { obtenerActividad } from "../services/activityService";
+import LienzoActividad from "../components/LienzoActividad";
+import { leerAjustes } from "../components/shared/ajustesLectura";
+import "../styles/editor.css";
 
 // Vista previa de solo lectura tal como la verá el alumno: preguntas y opciones, sin respuesta correcta ni envío.
 // Se abre desde "Editar" o "Mis actividades" con ?actividad=ID.(claude)
 
 export default function PrevisualizarActividad() {
-  const actividadId = new URLSearchParams(window.location.search).get("actividad");
+  const [params] = useSearchParams();
+  const actividadId = params.get("actividad");
   const [actividad, setActividad] = useState(null);
   // Sin ID no hay nada que cargar: se arranca ya en "no cargando" en vez de cambiarlo dentro del efecto.
   const [cargando, setCargando] = useState(Boolean(actividadId));
@@ -20,14 +25,14 @@ export default function PrevisualizarActividad() {
   }, [actividadId]);
 
   const enlaceVolver = (
-    <a href="/actividades" className="enlace-volver">
-      ← Volver a Mis actividades
-    </a>
+    <Link to="/galeria" className="volver">
+      ← Volver a la Galería
+    </Link>
   );
 
   if (cargando) {
     return (
-      <div className="tarjeta salones-container salones-ancho">
+      <div className="actividad-pagina">
         <p role="status">Cargando vista previa...</p>
       </div>
     );
@@ -35,37 +40,29 @@ export default function PrevisualizarActividad() {
 
   if (!actividad) {
     return (
-      <div className="tarjeta salones-container salones-ancho">
+      <div className="actividad-pagina">
         {enlaceVolver}
-        <p className="sin-datos">No encontramos esa actividad.</p>
+        <p className="vacio">No encontramos esa actividad.</p>
       </div>
     );
   }
 
   const preguntas = actividad.contentJson?.preguntas ?? [];
+  const ajustes = leerAjustes(actividadId);
 
   return (
-    <div className="tarjeta salones-container salones-ancho">
+    <div className="actividad-pagina">
       {enlaceVolver}
 
-      <section className="vista-previa" aria-labelledby="vista-previa-alumno-titulo">
-        <h2 id="vista-previa-alumno-titulo">{actividad.title}</h2>
-        <p className="catalogo-subtitulo">Vista previa de alumno · solo lectura</p>
-
-        {preguntas.length === 0 && <p className="sin-datos">Sin preguntas</p>}
-        <ol className="vista-previa-preguntas">
-          {preguntas.map((p) => (
-            <li key={p.id}>
-              <p>{p.pregunta}</p>
-              <ul className="vista-previa-opciones">
-                {p.opciones.map((o, i) => (
-                  <li key={i}>{o.texto}</li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <p className="vacio">Vista previa de alumno · solo lectura</p>
+      <LienzoActividad
+        titulo={actividad.title}
+        preguntas={preguntas}
+        paginado
+        skin={actividad.template?.skin}
+        letra={ajustes.letra}
+        espaciado={ajustes.espaciado}
+      />
     </div>
   );
 }

@@ -38,8 +38,8 @@ export default function DetalleAlumno() {
       ← Volver al salón
     </a>
   ) : (
-    <a href="/salones" className="enlace-volver">
-      ← Volver a Mis salones
+    <a href="/grupos" className="enlace-volver">
+      ← Volver a Grupos
     </a>
   );
 

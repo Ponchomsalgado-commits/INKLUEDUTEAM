@@ -10,6 +10,7 @@ import {
   displayNameFromKey,
   isOwnedKey,
   maxBytesFrom,
+  ownedPrefix,
   validateUpload,
 } from './media.rules';
 
@@ -64,6 +65,11 @@ describe('claves de objeto', () => {
     expect(isOwnedKey(profe, 'media/otro-profe/a.pdf')).toBe(false);
     expect(isOwnedKey(profe, `media/${profe}/../otro/a.pdf`)).toBe(false);
     expect(isOwnedKey(profe, undefined as unknown as string)).toBe(false);
+  });
+
+  it('el prefijo de listado termina en / para no mezclar profesores con ids parecidos', () => {
+    expect(ownedPrefix(profe)).toBe(`media/${profe}/`);
+    expect(buildObjectKey(profe, 'a.pdf').startsWith(ownedPrefix(profe))).toBe(true);
   });
 });
 

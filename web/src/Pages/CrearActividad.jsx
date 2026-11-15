@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
+import { Link, useSearchParams } from "react-router";
 import TemplateEditor from "../components/TemplateEditor";
 import SubirMaterial from "../components/SubirMaterial";
+import LienzoActividad from "../components/LienzoActividad";
+import { ICONOS_SKIN } from "../components/shared/iconosSkin";
+import { temaDeSkin } from "../components/shared/temaSkin";
+import {
+  AJUSTES_POR_DEFECTO,
+  guardarAjustes,
+  leerAjustes,
+} from "../components/shared/ajustesLectura";
+import "../styles/editor.css";
 import { materialDesdeReferencia } from "../components/shared/materialUtils";
 import { opcionesIniciales, preguntaVacia } from "../components/shared/preguntaVacia";
 import {
@@ -11,12 +22,12 @@ import {
 } from "../services/activityService";
 import { validarPreguntas } from "../components/shared/validarPreguntas";
 import { mensajeDeError } from "../components/shared/errorHandler";
-import PublicarActividad from "../components/PublicarActividad";
+import { rutaInterna } from "../components/shared/rutaInterna";
 
-// Pantalla para editar una copia de la plantilla elegida en /salones/crear.
-// "Guardar" solo guarda; "Guardar y publicar" guarda y abre la ventana para elegir
-// salón o tutoría y fecha límite (si se llegó con ?salon=ID, ese salón viene preseleccionado).
-// Con ?actividad=ID (desde "Mis actividades") edita esa actividad propia en vez de crear otra.
+// Con ?volver=/grupos/ID (desde el salón) el editor regresa allí con la plantilla guardada elegida.
+// Editor de una copia de la plantilla elegida: Contenido, Diseño y Ajustes de lectura.
+// Solo diseña la actividad; publicarla con fecha límite se hace desde el salón.
+// Con ?actividad=ID (desde la Galería o "Seguir editando") edita esa actividad propia en vez de crear otra.
 
 // Plantilla de origen de una actividad: el catálogo trae el schemaJson que necesita el editor
 function plantillaDeActividad(plantillas, actividad) {
@@ -24,35 +35,38 @@ function plantillaDeActividad(plantillas, actividad) {
 }
 
 export default function CrearActividad() {
-  const params = new URLSearchParams(window.location.search);
+  const [params] = useSearchParams();
   const plantillaId = params.get("plantilla");
   const actividadId = params.get("actividad");
-  const salonId = params.get("salon");
-  const salonNombre = params.get("salonNombre");
   const esEdicion = Boolean(actividadId);
+  const volverASalon = rutaInterna(params.get("volver"));
 
   const [plantilla, setPlantilla] = useState(null);
+  const [plantillas, setPlantillas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [titulo, setTitulo] = useState("");
   const [preguntas, setPreguntas] = useState([]);
   const [materiales, setMateriales] = useState([]);
+  const [ajustes, setAjustes] = useState(AJUSTES_POR_DEFECTO);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState(null);
-  // Una vez creada, volver a guardar o publicar no la duplica
+  // Si ya se creó la actividad, guardar otra vez no la duplica
   const [actividadCreada, setActividadCreada] = useState(null);
-  // Actividad guardada que se está publicando (abre la ventana de publicar)
-  const [aPublicar, setAPublicar] = useState(null);
+  // Pestaña abierta del panel lateral (solo presentación)
+  const [pestana, setPestana] = useState("contenido");
 
   useEffect(() => {
     const cargar = async () => {
       const plantillas = await obtenerPlantillas();
+      setPlantillas(plantillas);
 
       if (esEdicion) {
         const actividad = await obtenerActividad(actividadId);
         const origen = plantillaDeActividad(plantillas, actividad);
         if (!origen) return;
         setPlantilla(origen);
+        setAjustes(leerAjustes(actividadId));
         setTitulo(actividad.title);
         setPreguntas(actividad.contentJson?.preguntas ?? []);
         setMateriales((actividad.media ?? []).map(materialDesdeReferencia));
@@ -81,8 +95,6 @@ export default function CrearActividad() {
 
   const handleGuardar = async (e) => {
     e.preventDefault();
-    // Qué botón envió el formulario: "Guardar" o "Guardar y publicar"
-    const publicar = e.nativeEvent?.submitter?.value === "publicar";
     setError("");
     setResultado(null);
 
@@ -109,16 +121,17 @@ export default function CrearActividad() {
 
     setGuardando(true);
     try {
-      let id = actividadId;
       if (esEdicion) {
         await editarActividad(actividadId, datos);
-      } else {
-        const actividad = actividadCreada ?? (await crearActividad({ templateId: plantilla.id, ...datos }));
-        setActividadCreada(actividad);
-        id = actividad.id;
+        guardarAjustes(actividadId, ajustes);
+        setResultado({ titulo: datos.title });
+        return;
       }
-      setResultado({ titulo: datos.title, mensaje: "guardada" });
-      if (publicar) setAPublicar({ id, title: datos.title });
+
+      const actividad = actividadCreada ?? (await crearActividad({ templateId: plantilla.id, ...datos }));
+      setActividadCreada(actividad);
+      guardarAjustes(actividad.id, ajustes);
+      setResultado({ titulo: datos.title });
     } catch (err) {
       setError(mensajeDeError(err, "No se pudo guardar la actividad"));
     } finally {
@@ -128,19 +141,15 @@ export default function CrearActividad() {
 
   const idActividad = esEdicion ? actividadId : actividadCreada?.id;
 
-  const enlaceVolver = esEdicion ? (
-    <a href="/actividades" className="enlace-volver">
-      ← Volver a Mis actividades
-    </a>
-  ) : (
-    <a href="/salones/crear" className="enlace-volver">
-      ← Volver a Crear salón
-    </a>
+  const enlaceVolver = (
+    <Link to={volverASalon ?? "/editor"} className="volver">
+      {volverASalon ? "← Volver al salón" : "← Volver al Editor"}
+    </Link>
   );
 
   if (cargando) {
     return (
-      <div className="tarjeta salones-container salones-ancho">
+      <div className="actividad-pagina">
         <p role="status">{esEdicion ? "Cargando actividad..." : "Cargando plantilla..."}</p>
       </div>
     );
@@ -148,9 +157,9 @@ export default function CrearActividad() {
 
   if (!plantilla) {
     return (
-      <div className="tarjeta salones-container salones-ancho">
+      <div className="actividad-pagina">
         {enlaceVolver}
-        <p className="sin-datos">
+        <p className="vacio">
           {esEdicion
             ? "No encontramos esa actividad."
             : "No encontramos esa plantilla. Elige una del catálogo."}
@@ -159,92 +168,194 @@ export default function CrearActividad() {
     );
   }
 
+  const PESTANAS = [
+    { clave: "contenido", texto: "Contenido" },
+    { clave: "diseno", texto: "Diseño" },
+    { clave: "ajustes", texto: "Ajustes" },
+  ];
+  // Solo se puede cambiar de diseño al crear y entre skins de la misma mecánica (mismo schema)
+  const disenos = plantillas.filter((p) => p.type === plantilla.type);
+
   return (
-    <div className="tarjeta salones-container salones-ancho">
+    <div className="actividad-pagina">
       {enlaceVolver}
 
-      <form className="crear-actividad" onSubmit={handleGuardar}>
-        <h2>
-          {esEdicion ? "Editar actividad" : "Nueva actividad"}: {plantilla.displayName}
-        </h2>
-        <p className="catalogo-subtitulo">
-          {esEdicion
-            ? "Los cambios se guardan en tu copia; la plantilla original no se modifica."
-            : salonId
-              ? `Al guardar quedará en tus actividades. Con "Guardar y publicar" podrás publicarla en "${salonNombre ?? "tu salón"}" o en otro salón.`
-              : 'Al guardar quedará en tus actividades. Con "Guardar y publicar" eliges el salón o tutoría y la fecha límite.'}
-        </p>
+      <h1 className="titulo-pagina">
+        {esEdicion ? "Editar actividad" : "Nueva actividad"}: {plantilla.displayName}
+      </h1>
+      <p className="vacio">
+        {esEdicion
+          ? "Los cambios se guardan en tu copia; la plantilla original no se modifica."
+          : "Al guardar quedará en tus actividades. La publicas en un salón desde Grupos."}
+      </p>
 
-        <div className="form-group">
-          <label htmlFor="actividad-titulo">Título de la actividad</label>
-          <input
-            id="actividad-titulo"
-            type="text"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
-          />
-        </div>
-
-        <TemplateEditor
-          schemaPreguntas={plantilla.schemaJson.fields.preguntas}
+      <form
+        className="editor"
+        onSubmit={handleGuardar}
+        // Un campo obligatorio vacío en otra pestaña no se puede enfocar: se vuelve a Contenido antes
+        onInvalidCapture={() => flushSync(() => setPestana("contenido"))}
+      >
+        <LienzoActividad
+          titulo={titulo}
           preguntas={preguntas}
-          onChange={setPreguntas}
+          skin={plantilla.skin}
+          mostrarCorrectas
+          letra={ajustes.letra}
+          espaciado={ajustes.espaciado}
         />
 
-        <SubirMaterial materiales={materiales} onChange={setMateriales} />
+        <aside className="panel-lateral">
+          <div className="pestanas" role="tablist">
+            {PESTANAS.map((p) => (
+              <button
+                key={p.clave}
+                type="button"
+                role="tab"
+                id={`pestana-${p.clave}`}
+                aria-selected={pestana === p.clave}
+                aria-controls={`panel-${p.clave}`}
+                onClick={() => setPestana(p.clave)}
+              >
+                {p.texto}
+              </button>
+            ))}
+          </div>
 
-        {error && <p role="alert">{error}</p>}
-        {resultado && (
-          <p role="status">
-            Actividad "{resultado.titulo}" {resultado.mensaje}.{" "}
-            <a href="/actividades">Ver mis actividades</a>
-          </p>
-        )}
+          <div
+            className="panel-cuerpo"
+            id="panel-contenido"
+            role="tabpanel"
+            aria-labelledby="pestana-contenido"
+            hidden={pestana !== "contenido"}
+          >
+            <div className="campo-bloque">
+              <label htmlFor="actividad-titulo">Título de la actividad</label>
+              <input
+                id="actividad-titulo"
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                required
+              />
+            </div>
 
-        <div className="guardar-acciones">
-          <button
-            type="submit"
-            name="accion"
-            value="guardar"
-            className="btn-guardar-actividad"
-            disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
+            <TemplateEditor
+              schemaPreguntas={plantilla.schemaJson.fields.preguntas}
+              preguntas={preguntas}
+              onChange={setPreguntas}
+            />
+
+            <SubirMaterial materiales={materiales} onChange={setMateriales} />
+          </div>
+
+          <div
+            className="panel-cuerpo"
+            id="panel-diseno"
+            role="tabpanel"
+            aria-labelledby="pestana-diseno"
+            hidden={pestana !== "diseno"}
           >
-            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Guardar actividad"}
-          </button>
-          <button
-            type="submit"
-            name="accion"
-            value="publicar"
-            className="btn-guardar-actividad"
-            disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
+            <h3>Escoge un diseño</h3>
+            <div className="temas">
+              {disenos.map((d) => {
+                const actual = d.id === plantilla.id;
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    className="tema-opcion"
+                    aria-pressed={actual}
+                    disabled={esEdicion && !actual}
+                    onClick={() => setPlantilla(d)}
+                  >
+                    <strong>{d.displayName}</strong>
+                    <div className={`tema-previa tema-${temaDeSkin(d.skin)}`} aria-hidden="true">
+                      {ICONOS_SKIN[d.skin] ?? "🎮"}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {esEdicion && (
+              <p className="vacio">El diseño se elige al crear la actividad y no se cambia después.</p>
+            )}
+          </div>
+
+          <div
+            className="panel-cuerpo"
+            id="panel-ajustes"
+            role="tabpanel"
+            aria-labelledby="pestana-ajustes"
+            hidden={pestana !== "ajustes"}
           >
-            {guardando ? "Guardando..." : "Guardar y publicar"}
-          </button>
-        </div>
-        {!esEdicion && resultado && idActividad && (
-          <button
-            type="button"
-            className="btn-secundario"
-            onClick={() => setAPublicar({ id: idActividad, title: resultado.titulo })}
-          >
-            Publicar en un salón
-          </button>
-        )}{" "}
-        {idActividad && (
-          <a href={`/actividades/previa?actividad=${idActividad}`} className="plantilla-usar">
-            Previsualizar como alumno
-          </a>
-        )}
+            <h3>Ajustes de lectura</h3>
+            <div className="campo-bloque">
+              <label htmlFor="ajuste-letra">
+                Tamaño de letra: <output htmlFor="ajuste-letra">{ajustes.letra} px</output>
+              </label>
+              <input
+                id="ajuste-letra"
+                type="range"
+                min="16"
+                max="32"
+                step="2"
+                value={ajustes.letra}
+                onChange={(e) => setAjustes((a) => ({ ...a, letra: Number(e.target.value) }))}
+              />
+            </div>
+            <div className="campo-bloque">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={ajustes.espaciado}
+                  onChange={(e) => setAjustes((a) => ({ ...a, espaciado: e.target.checked }))}
+                />{" "}
+                Más espacio entre bloques
+              </label>
+            </div>
+          </div>
+
+          <div className="panel-cuerpo panel-pie">
+            {error && (
+              <p className="mensaje error" role="alert">
+                {error}
+              </p>
+            )}
+            {resultado && (
+              <p className="mensaje exito" role="status">
+                Actividad "{resultado.titulo}" guardada.{" "}
+                {volverASalon && idActividad ? (
+                  <Link to={`${volverASalon}?pestana=crear&actividad=${idActividad}`}>
+                    Volver al salón y usarla
+                  </Link>
+                ) : (
+                  <Link to="/galeria">Ver en la Galería</Link>
+                )}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="boton"
+              disabled={guardando || (!esEdicion && Boolean(resultado)) || !titulo.trim()}
+            >
+              {guardando
+                ? "Guardando..."
+                : esEdicion
+                  ? "Guardar cambios"
+                  : "Guardar actividad"}
+            </button>
+            {idActividad && (
+              <Link
+                to={`/actividades/previa?actividad=${idActividad}`}
+                className="boton boton-sec"
+              >
+                Previsualizar como alumno
+              </Link>
+            )}
+          </div>
+        </aside>
       </form>
-
-      {aPublicar && (
-        <PublicarActividad
-          actividad={aPublicar}
-          salonInicialId={salonId ?? ""}
-          onCerrar={() => setAPublicar(null)}
-        />
-      )}
     </div>
   );
 }

@@ -1,0 +1,390 @@
+/* ===== Editor: lista (editor.html) ===== */
+.editor-pagina {
+  width: 100%;
+  max-width: 1250px;
+}
+
+.editor-pagina .buscador {
+  min-width: 0;
+  flex: 1;
+  padding: 0.65rem 1.2rem;
+  border: 2px solid var(--borde);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+}
+
+.editor-pagina .buscador:focus {
+  border-color: var(--primario);
+  box-shadow: none;
+}
+
+.editor-pagina .barra .boton {
+  display: inline-flex;
+  align-self: stretch;
+  align-items: center;
+}
+
+.editor-pagina .ed-lista {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.editor-pagina .ed-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.editor-pagina .ed-fila-icono {
+  font-size: 1.6rem;
+}
+
+.editor-pagina .ed-fila-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.editor-pagina .ed-fila-info small {
+  color: var(--suave);
+}
+
+.editor-pagina .ed-fila-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ===== Crear, editar y previsualizar actividad (editor-diseno.html) ===== */
+.actividad-pagina {
+  width: 100%;
+  max-width: 1250px;
+}
+
+.actividad-pagina .editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 1.25rem;
+}
+
+@media (max-width: 950px) {
+  .actividad-pagina .editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actividad-pagina .lienzo {
+  min-height: 560px;
+  padding: 2rem;
+  border: 2px solid var(--tinta);
+  border-radius: 14px;
+  background: var(--lienzo-fondo);
+  color: var(--lienzo-tinta);
+}
+
+.actividad-pagina .lienzo h2 {
+  margin-bottom: 1.5rem;
+  color: var(--lienzo-acento);
+  font-size: 2em;
+  text-align: center;
+}
+
+.actividad-pagina .bloques {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: 1rem;
+}
+
+.actividad-pagina .bloques.una {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.actividad-pagina .bloque:focus {
+  outline: none;
+}
+
+.actividad-pagina .bloque:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.actividad-pagina .paginas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.actividad-pagina .paginas-numeros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.actividad-pagina .pagina-numero {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 2px solid var(--lienzo-acento);
+  border-radius: 50%;
+  background: var(--lienzo-bloque);
+  color: var(--lienzo-tinta);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actividad-pagina .pagina-numero[aria-current='page'] {
+  background: var(--lienzo-acento);
+  color: #fff;
+}
+
+.actividad-pagina .paginas-indicador {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.actividad-pagina .bloque {
+  min-height: 150px;
+  padding: 1rem;
+  border: 3px solid var(--lienzo-acento);
+  border-radius: 16px;
+  background: var(--lienzo-bloque);
+}
+
+.actividad-pagina .bloque h3 {
+  color: var(--lienzo-acento);
+  font-size: 0.8em;
+}
+
+.actividad-pagina .bloque p {
+  margin: 0 0 0.5rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.actividad-pagina .bloque-opciones {
+  margin: 0;
+  padding-left: 1.2rem;
+  overflow-wrap: anywhere;
+}
+
+/* Temas del lienzo: solo cambian 4 variables */
+.actividad-pagina .tema-rana {
+  --lienzo-fondo: #e4f3df;
+  --lienzo-bloque: #fff;
+  --lienzo-acento: #2a6f35;
+  --lienzo-tinta: #183a1d;
+}
+
+.actividad-pagina .tema-mariposa {
+  --lienzo-fondo: #f1e6f8;
+  --lienzo-bloque: #fff;
+  --lienzo-acento: #7a3fa6;
+  --lienzo-tinta: #3a1d4f;
+}
+
+.actividad-pagina .tema-abeja {
+  --lienzo-fondo: #fff4cc;
+  --lienzo-bloque: #fff;
+  --lienzo-acento: #8a5a00;
+  --lienzo-tinta: #3d2c00;
+}
+
+.actividad-pagina .tema-gato {
+  --lienzo-fondo: #fde6d6;
+  --lienzo-bloque: #fff;
+  --lienzo-acento: #a2461b;
+  --lienzo-tinta: #4a2310;
+}
+
+/* Panel lateral con pestañas */
+.actividad-pagina .panel-lateral {
+  border: 2px solid var(--tinta);
+  background: var(--fondo-3);
+}
+
+.actividad-pagina .panel-cuerpo {
+  padding: 1rem;
+}
+
+.actividad-pagina .panel-cuerpo h3 {
+  font-size: 1rem;
+}
+
+.actividad-pagina .panel-pie {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 2px solid var(--borde);
+}
+
+.actividad-pagina .panel-pie .mensaje {
+  min-height: 0;
+  margin: 0;
+}
+
+.actividad-pagina .panel-pie .boton {
+  width: 100%;
+  text-align: center;
+}
+
+.actividad-pagina .boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actividad-pagina .boton-chico:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actividad-pagina .campo-bloque {
+  min-width: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.actividad-pagina .campo-bloque label,
+.actividad-pagina .campo-bloque legend {
+  display: block;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-weight: 700;
+}
+
+.actividad-pagina .campo-bloque textarea,
+.actividad-pagina .campo-bloque input[type='text'],
+.actividad-pagina .campo-bloque input[type='date'] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid var(--borde);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+}
+
+.actividad-pagina .temas {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.actividad-pagina .tema-opcion {
+  padding: 0.6rem;
+  border: 3px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--tinta);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.actividad-pagina .tema-opcion[aria-pressed='true'] {
+  border-color: var(--foco);
+}
+
+.actividad-pagina .tema-opcion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actividad-pagina .campo-bloque input[type='range'] {
+  width: 100%;
+}
+
+.actividad-pagina .lienzo.amplio .bloques {
+  gap: 2rem;
+}
+
+.actividad-pagina .lienzo.amplio .bloque {
+  padding: 1.75rem;
+}
+
+.actividad-pagina .tema-opcion strong {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.actividad-pagina .tema-previa {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--lienzo-fondo);
+  font-size: 2rem;
+}
+
+/* Editor de preguntas (TemplateEditor) */
+.actividad-pagina .te-contador {
+  margin: 0 0 0.5rem;
+  color: var(--suave);
+}
+
+.actividad-pagina .te-preguntas {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.actividad-pagina .te-pregunta {
+  padding: 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.actividad-pagina .te-pregunta-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.actividad-pagina .te-pregunta-cab h4 {
+  margin: 0;
+}
+
+.actividad-pagina .te-opciones {
+  margin-bottom: 0;
+}
+
+.actividad-pagina .te-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.actividad-pagina .te-opcion input[type='text'] {
+  min-width: 0;
+  flex: 1;
+}
+
+.actividad-pagina .te-opcion input[type='radio'] {
+  flex: none;
+  accent-color: var(--acento);
+}

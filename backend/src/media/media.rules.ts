@@ -88,11 +88,15 @@ export function buildObjectKey(teacherId: string, originalName: string): string 
   return `${KEY_PREFIX}/${teacherId}/${randomUUID()}-${limpio}.${ext}`;
 }
 
+export function ownedPrefix(teacherId: string): string {
+  return `${KEY_PREFIX}/${teacherId}/`;
+}
+
 export function isOwnedKey(teacherId: string, key: string): boolean {
   return (
     typeof key === 'string' &&
     key.length <= 300 &&
-    key.startsWith(`${KEY_PREFIX}/${teacherId}/`) &&
+    key.startsWith(ownedPrefix(teacherId)) &&
     !key.includes('..')
   );
 }
