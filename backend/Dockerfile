@@ -12,7 +12,9 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:dev"]
+# node_modules vive en un volumen que sobrevive entre reconstrucciones y puede quedar viejo:
+# al arrancar se sincroniza con package.json y se regenera el cliente Prisma (postinstall).
+CMD ["sh", "-c", "npm install --no-audit --no-fund && npx prisma generate && npx prisma migrate deploy && npm run start:dev"]
 
 # ---------- build: compila TypeScript a dist/ ----------
 FROM development AS build
